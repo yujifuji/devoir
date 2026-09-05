@@ -352,12 +352,16 @@
   <button class="fab" id="fabAdd" aria-label="Ajouter">+</button>
 
   <div class="sheet-backdrop" id="sheetBackdrop">
-    <div class="sheet">
+<div class="sheet">
       <h2>Nouvelle tâche</h2>
       <label class="field-label">Matière</label>
       <div class="subject-grid" id="subjectGrid"></div>
       <label class="field-label">Description</label>
       <input type="text" id="taskInput" placeholder="Ex: Exercices 3 et 4 page 52" autocomplete="off">
+      <label class="field-label field-checkbox">
+        <input type="checkbox" id="taskRecurring">
+        Répéter chaque jour
+      </label>
       <div class="sheet-buttons">
         <button class="btn btn-cancel" id="btnCancel">Annuler</button>
         <button class="btn btn-add" id="btnAdd" disabled>Ajouter</button>
@@ -694,13 +698,10 @@
     btnAdd.disabled = !(selectedSubject && taskInput.value.trim().length > 0);
   }
 
-  function openSheet() {
+ function openSheet() {
+    document.getElementById('taskRecurring').checked = false; // Réinitialise la case
     selectedSubject = null;
     taskInput.value = '';
-    renderSubjectChips();
-    validateForm();
-    sheetBackdrop.classList.add('open');
-    setTimeout(() => taskInput.focus(), 100);
   }
 
   function closeSheet() {
@@ -713,9 +714,12 @@
     if (e.target === sheetBackdrop) closeSheet();
   });
   taskInput.addEventListener('input', validateForm);
-  btnAdd.addEventListener('click', () => {
+btnAdd.addEventListener('click', () => {
     if (selectedSubject && taskInput.value.trim()) {
-      addTask(selectedSubject, taskInput.value.trim());
+      // On récupère l'état de la case à cocher
+      const isRecurring = document.getElementById('taskRecurring').checked;
+      // On passe isRecurring en 3ème argument
+      addTask(selectedSubject, taskInput.value.trim(), isRecurring);
       closeSheet();
     }
   });
