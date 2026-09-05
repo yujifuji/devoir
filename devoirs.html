@@ -454,20 +454,23 @@
     return d.toISOString().slice(0, 10);
   }
 
-  function loadData() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { date: todayKey(), tasks: [] };
-      const data = JSON.parse(raw);
-      if (data.date !== todayKey()) {
-        return { date: todayKey(), tasks: [] };
-      }
-      return data;
-    } catch (e) {
-      return { date: todayKey(), tasks: [] };
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { date: todayKey(), tasks: [] };
+    const data = JSON.parse(raw);
+    if (data.date !== todayKey()) {
+      // On garde les tâches récurrentes, on réinitialise leur "done"
+      const keptTasks = (data.tasks || [])
+        .filter(t => t.recurring)
+        .map(t => ({ ...t, done: false }));
+      return { date: todayKey(), tasks: keptTasks };
     }
+    return data;
+  } catch (e) {
+    return { date: todayKey(), tasks: [] };
   }
-
+}
   function saveData(data) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -654,16 +657,17 @@
     renderTasks();
   }
 
-  function addTask(subject, title) {
-    state.tasks.push({
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-      subject,
-      title,
-      done: false
-    });
-    saveData(state);
-    renderTasks();
-  }
+ function addTask(subject, title, recurring) {
+  state.tasks.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    subject,
+    title,
+    done: false,
+    recurring: !!recurring
+  });
+  saveData(state);
+  renderTasks();
+}
 
   // Sheet (formulaire d'ajout)
   const sheetBackdrop = document.getElementById('sheetBackdrop');
@@ -698,10 +702,17 @@
     btnAdd.disabled = !(selectedSubject && taskInput.value.trim().length > 0);
   }
 
- function openSheet() {
-    document.getElementById('taskRecurring').checked = false; // Réinitialise la case
+function openSheet() {
+    // NOUVEAU : On décoche la case à chaque fois qu'on ouvre le menu
+    if (document.getElementById('taskRecurring')) {
+        document.getElementById('taskRecurring').checked = false; 
+    }
     selectedSubject = null;
     taskInput.value = '';
+    renderSubjectChips();
+    validateForm();
+    sheetBackdrop.classList.add('open');
+    setTimeout(() => taskInput.focus(), 100);
   }
 
   function closeSheet() {
@@ -714,11 +725,17 @@
     if (e.target === sheetBackdrop) closeSheet();
   });
   taskInput.addEventListener('input', validateForm);
-btnAdd.addEventListener('click', () => {
+  
+  btnAdd.addEventListener('click', () => {
     if (selectedSubject && taskInput.value.trim()) {
-      // On récupère l'état de la case à cocher
-      const isRecurring = document.getElementById('taskRecurring').checked;
-      // On passe isRecurring en 3ème argument
+      // NOUVEAU : On vérifie si la case est cochée (vrai ou faux)
+      let isRecurring = false;
+      const checkbox = document.getElementById('taskRecurring');
+      if (checkbox) {
+          isRecurring = checkbox.checked;
+      }
+      
+      // NOUVEAU : On envoie "isRecurring" en 3ème paramètre à la fonction addTask
       addTask(selectedSubject, taskInput.value.trim(), isRecurring);
       closeSheet();
     }
