@@ -460,11 +460,7 @@ function loadData() {
     if (!raw) return { date: todayKey(), tasks: [] };
     const data = JSON.parse(raw);
     if (data.date !== todayKey()) {
-      // On garde les tâches récurrentes, on réinitialise leur "done"
-      const keptTasks = (data.tasks || [])
-        .filter(t => t.recurring)
-        .map(t => ({ ...t, done: false }));
-      return { date: todayKey(), tasks: keptTasks };
+      return { date: todayKey(), tasks: data.tasks.filter(t => !t.done) };
     }
     return data;
   } catch (e) {
