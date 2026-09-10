@@ -467,24 +467,12 @@ function loadData() {
     return { date: todayKey(), tasks: [] };
   }
 }
-  const SHORTCUT_NAME = "SaveDevoirs"; // nom du Raccourci iOS à créer
 
   function saveData(data) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
       console.error("Erreur de sauvegarde", e);
-    }
-
-    try {
-      const url =
-        "shortcuts://x-callback-url/run-shortcut?name=" +
-        encodeURIComponent(SHORTCUT_NAME) +
-        "&input=text&text=" +
-        encodeURIComponent(JSON.stringify(data));
-      window.location.href = url;
-    } catch (e) {
-      console.error("Erreur d'appel du Raccourci", e);
     }
   }
 
