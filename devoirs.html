@@ -358,6 +358,7 @@
       <div class="subject-grid" id="subjectGrid"></div>
       <label class="field-label">Description</label>
       <input type="text" id="taskInput" placeholder="Ex: Exercices 3 et 4 page 52" autocomplete="off">
+      <input type="date" id="task-due-date" />
       <label class="field-label field-checkbox">
         <input type="checkbox" id="taskRecurring">
         Répéter chaque jour
@@ -405,13 +406,15 @@
   }
 
   // Marque le jour actuel comme "complet" si toutes les tâches sont cochées et qu'il y en a au moins une
-  function updateStreak() {
-    const log = loadStreakLog();
-    const total = state.tasks.length;
-    const done = state.tasks.filter(t => t.done).length;
-    log[todayKey()] = total > 0 && done === total;
-    saveStreakLog(log);
-  }
+function updateStreak() {
+  const log = loadStreakLog();
+  const today = todayKey();
+  const relevantTasks = state.tasks.filter(t => !t.dueDate || t.dueDate <= today);
+  const total = relevantTasks.length;
+  const done = relevantTasks.filter(t => t.done).length;
+  log[today] = total > 0 && done === total;
+  saveStreakLog(log);
+}
 
   // Compte les jours consécutifs (en remontant depuis aujourd'hui ou hier) où tout était coché
   function computeStreak() {
@@ -654,13 +657,13 @@ function loadData() {
     renderTasks();
   }
 
- function addTask(subject, title, recurring) {
+function addTask(subject, title, dueDate) {
   state.tasks.push({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
     subject,
     title,
-    done: false,
-    recurring: !!recurring
+    dueDate: dueDate || todayKey(),
+    done: false
   });
   saveData(state);
   renderTasks();
