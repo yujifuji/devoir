@@ -727,19 +727,14 @@ function openSheet() {
   taskInput.addEventListener('input', validateForm);
   
   btnAdd.addEventListener('click', () => {
-    if (selectedSubject && taskInput.value.trim()) {
-      // NOUVEAU : On vérifie si la case est cochée (vrai ou faux)
-      let isRecurring = false;
-      const checkbox = document.getElementById('taskRecurring');
-      if (checkbox) {
-          isRecurring = checkbox.checked;
-      }
-      
-      // NOUVEAU : On envoie "isRecurring" en 3ème paramètre à la fonction addTask
-      addTask(selectedSubject, taskInput.value.trim(), isRecurring);
-      closeSheet();
-    }
-  });
+  if (selectedSubject && taskInput.value.trim()) {
+    const dateInput = document.getElementById('task-due-date');
+    const dueDate = dateInput && dateInput.value ? dateInput.value : todayKey();
+
+    addTask(selectedSubject, taskInput.value.trim(), dueDate);
+    closeSheet();
+  }
+});
 
   // Support d'un raccourci iOS : devoirs.html?matiere=Maths&tache=Exercices%203
   function handleUrlParams() {
