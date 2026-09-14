@@ -186,7 +186,14 @@
   .checkbox.checked svg { display: block; }
 
   .task-body { flex: 1; min-width: 0; }
-
+  
+  .due-date {
+    font-size: 11px;
+    color: #8a8f98;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  
   .task-top {
     display: flex;
     align-items: center;
@@ -492,64 +499,82 @@ function loadData() {
     return s ? s.color : "#8b93a1";
   }
 
-  function renderTasks() {
-    const list = document.getElementById('taskList');
-    list.innerHTML = '';
+  function formatDueDate(dueDate) {
+  if (!dueDate) return '';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((due - today) / 86400000);
 
-    if (state.tasks.length === 0) {
-      list.innerHTML = `
-        <div class="empty-state">
-          <div class="emoji">📚</div>
-          <p>Aucune tâche pour aujourd'hui.<br>Appuie sur + pour en ajouter une.</p>
-        </div>`;
-      updateProgress();
-      return;
-    }
+  if (diffDays === 0) return 'Aujourd\'hui';
+  if (diffDays === 1) return 'Demain';
 
-    state.tasks.forEach(task => {
-      const el = document.createElement('div');
-      el.className = 'task' + (task.done ? ' done' : '');
-      const color = subjectColor(task.subject);
-      el.dataset.id = task.id;
-      el.innerHTML = `
-        <div class="drag-handle" title="Glisser pour réordonner">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle>
-            <circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle>
-            <circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle>
-          </svg>
-        </div>
-        <div class="checkbox ${task.done ? 'checked' : ''}" data-id="${task.id}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#14171c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <div class="task-body">
-          <div class="task-top">
-            <span class="tag" style="background:${color}22; color:${color}">${task.subject}</span>
-          </div>
-          <div class="task-title">${escapeHtml(task.title)}</div>
-        </div>
-        <button class="task-delete" data-id="${task.id}" aria-label="Supprimer">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      `;
-      list.appendChild(el);
-    });
+  const dd = String(due.getDate()).padStart(2, '0');
+  const mm = String(due.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}`;
+}
 
-    list.querySelectorAll('.checkbox').forEach(cb => {
-      cb.addEventListener('click', () => toggleTask(cb.dataset.id));
-    });
-    list.querySelectorAll('.task-delete').forEach(btn => {
-      btn.addEventListener('click', () => deleteTask(btn.dataset.id));
-    });
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
 
-    enableDragReorder(list);
+  if (state.tasks.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="emoji">📚</div>
+        <p>Aucune tâche pour aujourd'hui.<br>Appuie sur + pour en ajouter une.</p>
+      </div>`;
     updateProgress();
+    return;
   }
+
+  state.tasks.forEach(task => {
+    const el = document.createElement('div');
+    el.className = 'task' + (task.done ? ' done' : '');
+    const color = subjectColor(task.subject);
+    const dueLabel = formatDueDate(task.dueDate);
+    el.dataset.id = task.id;
+    el.innerHTML = `
+      <div class="drag-handle" title="Glisser pour réordonner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle>
+          <circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle>
+          <circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle>
+        </svg>
+      </div>
+      <div class="checkbox ${task.done ? 'checked' : ''}" data-id="${task.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#14171c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div class="task-body">
+        <div class="task-top">
+          <span class="tag" style="background:${color}22; color:${color}">${task.subject}</span>
+          ${dueLabel ? `<span class="due-date">${dueLabel}</span>` : ''}
+        </div>
+        <div class="task-title">${escapeHtml(task.title)}</div>
+      </div>
+      <button class="task-delete" data-id="${task.id}" aria-label="Supprimer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    `;
+    list.appendChild(el);
+  });
+
+  list.querySelectorAll('.checkbox').forEach(cb => {
+    cb.addEventListener('click', () => toggleTask(cb.dataset.id));
+  });
+  list.querySelectorAll('.task-delete').forEach(btn => {
+    btn.addEventListener('click', () => deleteTask(btn.dataset.id));
+  });
+
+  enableDragReorder(list);
+  updateProgress();
+}
 
   function enableDragReorder(list) {
     let draggedEl = null;
