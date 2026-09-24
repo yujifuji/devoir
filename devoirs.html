@@ -107,7 +107,7 @@
     padding: 16px 16px 100px;
     overflow-y: auto;
   }
-
+  
   .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -340,6 +340,21 @@
   .btn-cancel { background: var(--card); color: var(--ink-dim); }
   .btn-add { background: var(--accent); color: #1b1206; }
   .btn-add:disabled { opacity: 0.4; }
+
+  .smart-tip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: #fff8e1;
+  border-left: 4px solid #ffc107;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #6b5200;
+  }
+  .smart-tip .tip-icon { font-size: 1.3rem; }
+  .smart-tip p { margin: 0; }
 </style>
 </head>
 <body>
@@ -519,8 +534,18 @@ function renderTasks() {
   const list = document.getElementById('taskList');
   list.innerHTML = '';
 
+  // Décompte hors évaluations
+  const isEval = t => /[eé]val/i.test(t.title || '');
+  const regularCount = state.tasks.filter(t => !isEval(t)).length;
+
+  const suggestion = regularCount <= 1 ? `
+    <div class="smart-tip">
+      <span class="tip-icon">💡</span>
+      <p>Peu de tâches prévues aujourd'hui. Pourquoi ne pas faire quelques exercices supplémentaires ?</p>
+    </div>` : '';
+
   if (state.tasks.length === 0) {
-    list.innerHTML = `
+    list.innerHTML = suggestion + `
       <div class="empty-state">
         <div class="emoji">📚</div>
         <p>Aucune tâche pour aujourd'hui.<br>Appuie sur + pour en ajouter une.</p>
@@ -528,6 +553,11 @@ function renderTasks() {
     updateProgress();
     return;
   }
+
+  list.insertAdjacentHTML('beforeend', suggestion);
+    
+  });
+}
 
   state.tasks.forEach(task => {
     const el = document.createElement('div');
