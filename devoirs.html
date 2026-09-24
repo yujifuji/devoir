@@ -548,14 +548,37 @@ function renderTasks() {
   const list = document.getElementById('taskList');
   list.innerHTML = '';
 
+  const todayStr = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
+
+  // Comptage des devoirs du jour hors évaluations (détection de "eval" / "éval")
+  const todayTasks = state.tasks.filter(t => (t.dueDate || todayStr) === todayStr);
+  const nonEvalCount = todayTasks.filter(t => {
+    const title = (t.title || '').toLowerCase();
+    return !title.includes('eval') && !title.includes('éval');
+  }).length;
+
+  const suggestionHtml = `
+    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,180,84,0.1); border: 1px solid var(--accent); border-radius: 12px; color: var(--accent); font-size: 14px; text-align: center;">
+      <strong>💡 Suggestion :</strong> Journée plutôt calme. Profites-en pour faire quelques exercices d'entraînement !
+    </div>
+  `;
+
   if (state.tasks.length === 0) {
     list.innerHTML = `
       <div class="empty-state">
         <div class="emoji">📚</div>
         <p>Aucune tâche pour aujourd'hui.<br>Appuie sur + pour en ajouter une.</p>
-      </div>`;
+      </div>
+      ${suggestionHtml}`;
     updateProgress();
     return;
+  }
+
+  // Afficher la suggestion en haut si 0 ou 1 devoir aujourd'hui (hors évals)
+  if (nonEvalCount <= 1) {
+    const sugWrapper = document.createElement('div');
+    sugWrapper.innerHTML = suggestionHtml;
+    list.appendChild(sugWrapper);
   }
 
   // Tri chronologique stable (les tâches sans date à la fin)
