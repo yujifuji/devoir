@@ -355,6 +355,22 @@
   }
   .smart-tip .tip-icon { font-size: 1.3rem; }
   .smart-tip p { margin: 0; }
+  #schedulePanel{position:sticky;top:0;z-index:20;margin:0 0 12px;background:var(--bg,#14171c);border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden}
+.sch-head{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;font-weight:600}
+.sch-head button{background:none;border:none;color:inherit;font-size:18px;padding:2px 8px;cursor:pointer}
+#schTitle{flex:1;text-align:center}
+#schToggle{font-size:12px!important}
+.sch-scroll{max-height:36vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sch-scroll.hidden{display:none}
+.sch-grid{position:relative;margin-left:36px;margin-right:8px}
+.sch-hour{position:absolute;left:0;right:0;height:0;border-top:1px solid rgba(255,255,255,.1)}
+.sch-hour span{position:absolute;left:-32px;top:-8px;font-size:11px;opacity:.6}
+.sch-course{position:absolute;left:0;right:0;padding:4px 8px;box-sizing:border-box;font-size:12px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
+.sch-task{position:absolute;left:12%;right:0;padding:2px 8px;box-sizing:border-box;font-size:11px;border:1px solid;border-radius:8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sch-preview{position:absolute;left:12%;right:0;border-radius:8px;background:rgba(255,180,84,.3);border:2px dashed var(--accent);pointer-events:none;z-index:5}
+.sch-preview.bad{background:rgba(255,80,80,.3);border-color:#ff5050}
+.review-card{margin-bottom:15px;padding:12px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.5);border-radius:12px;font-size:14px}
+.task-meta{font-size:12px;opacity:.75;margin-left:8px}
 </style>
 </head>
 <body>
@@ -369,17 +385,31 @@
     <div class="streak-badge" id="streakBadge">🔥 <span id="streakCount"></span> jours d'affilée</div>
   </header>
 
+  <section id="schedulePanel">
+    <div class="sch-head">
+      <button id="schPrev" aria-label="Jour précédent">‹</button>
+      <div id="schTitle"></div>
+      <button id="schNext" aria-label="Jour suivant">›</button>
+      <button id="schToggle">Réduire</button>
+    </div>
+    <div class="sch-scroll" id="schScroll">
+      <div class="sch-grid" id="schGrid"></div>
+    </div>
+  </section>
+
   <main id="taskList"></main>
 
   <button class="fab" id="fabAdd" aria-label="Ajouter">+</button>
 
   <div class="sheet-backdrop" id="sheetBackdrop">
-<div class="sheet">
+    <div class="sheet">
       <h2>Nouvelle tâche</h2>
       <label class="field-label">Matière</label>
       <div class="subject-grid" id="subjectGrid"></div>
       <label class="field-label">Description</label>
       <input type="text" id="taskInput" placeholder="Ex: Exercices 3 et 4 page 52" autocomplete="off">
+      <label class="field-label">Durée estimée (minutes)</label>
+      <input type="number" id="taskDuration" min="5" max="240" step="5" value="30" inputmode="numeric">
       <input type="date" id="task-due-date" />
       <label class="field-label field-checkbox">
         <input type="checkbox" id="taskRecurring">
@@ -392,7 +422,6 @@
     </div>
   </div>
 </div>
-
 <script>
   const SUBJECTS = [
     { name: "📐Maths", color: "#7aa2f7" },
@@ -502,6 +531,183 @@ function loadData() {
   }
 
   let state = loadData();
+  const Q1_REF_MONDAY = '2026-09-28';
+const NO_REVIEW = ['EPS', 'Vie de classe'];
+const DAY_START = 8 * 60;
+const DAY_END = 18 * 60;
+const HOUR_PX = 44;
+const SNAP = 15;
+
+const SCHEDULE = {
+  1: [
+    { s: 8, e: 9, all: 'Maths' },
+    { s: 9, e: 10, all: 'NSI' },
+    { s: 10, e: 11, all: 'Français' },
+    { s: 11, e: 12, all: 'SES' }
+  ],
+  2: [
+    { s: 8, e: 9, all: 'Français' },
+    { s: 9, e: 10, q1: 'Ens. Scientifique P', q2: 'Anglais LV1' },
+    { s: 10, e: 11, all: 'Physique-Chimie' },
+    { s: 11, e: 12, all: 'Histoire-Géo' },
+    { s: 15, e: 16, all: 'Allemand LV2' },
+    { s: 16, e: 17, all: 'Musique' }
+  ],
+  3: [
+    { s: 8, e: 9, all: 'NSI' },
+    { s: 9, e: 10, all: 'Maths' },
+    { s: 10, e: 11, q1: 'SES', q2: 'Ens. Scientifique S' },
+    { s: 11, e: 12, all: 'Histoire-Géo' }
+  ],
+  4: [
+    { s: 8, e: 9, all: 'Français' },
+    { s: 9, e: 10, q1: 'Histoire-Géo', q2: 'Français' },
+    { s: 10, e: 11, q1: 'Français', q2: 'EMC' },
+    { s: 11, e: 12, all: 'Anglais LV1' }
+  ],
+  5: [
+    { s: 8, e: 10, all: 'EPS' },
+    { s: 10, e: 11, all: 'Physique-Chimie' },
+    { s: 11, e: 12, q1: 'SES', q2: 'Ens. Scientifique S' },
+    { s: 13, e: 14, all: 'Anglais LV1' },
+    { s: 14, e: 15, q1: 'Vie de classe', q2: 'Ens. Scientifique P' },
+    { s: 15, e: 16, all: 'Allemand LV2' }
+  ]
+};
+
+let schedViewDate = null;
+
+function parseDateKey(key) {
+  const p = key.split('-').map(Number);
+  return new Date(p[0], p[1] - 1, p[2]);
+}
+
+function toDateKey(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function mondayOf(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+
+function getQuinzaine(dateKey) {
+  const diff = Math.round((mondayOf(parseDateKey(dateKey)) - mondayOf(parseDateKey(Q1_REF_MONDAY))) / 604800000);
+  return (((diff % 2) + 2) % 2 === 0) ? 'Q1' : 'Q2';
+}
+
+function getCoursesForDate(dateKey) {
+  const q = getQuinzaine(dateKey);
+  const slots = SCHEDULE[parseDateKey(dateKey).getDay()] || [];
+  return slots.map(c => ({ s: c.s, e: c.e, name: c.all || (q === 'Q1' ? c.q1 : c.q2) }));
+}
+
+function getReviewCourses(dateKey) {
+  const names = [];
+  getCoursesForDate(dateKey).forEach(c => {
+    if (NO_REVIEW.indexOf(c.name) === -1 && names.indexOf(c.name) === -1) names.push(c.name);
+  });
+  return names;
+}
+
+function reminderHtml(dateKey) {
+  const names = getReviewCourses(dateKey);
+  if (!names.length) return '';
+  return `<div class="review-card">📖 <strong>Cours du jour à relire :</strong> ${names.map(escapeHtml).join(' · ')}</div>`;
+}
+
+function fmtMin(m) {
+  return String(Math.floor(m / 60)).padStart(2, '0') + 'h' + String(m % 60).padStart(2, '0');
+}
+
+function findConflict(dateKey, start, dur, ignoreId) {
+  const end = start + dur;
+  if (start < DAY_START || end > DAY_END) return true;
+  const busy = getCoursesForDate(dateKey).map(c => [c.s * 60, c.e * 60]);
+  state.tasks.forEach(t => {
+    if (String(t.id) !== String(ignoreId) && t.dueDate === dateKey && typeof t.scheduledStart === 'number') {
+      busy.push([t.scheduledStart, t.scheduledStart + (t.duration || 30)]);
+    }
+  });
+  return busy.some(b => start < b[1] && end > b[0]);
+}
+
+function scheduleTask(id, dateKey, start) {
+  const t = state.tasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  t.dueDate = dateKey;
+  t.scheduledStart = start;
+  saveData(state);
+  renderTasks();
+}
+
+function unscheduleTask(id) {
+  const t = state.tasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  delete t.scheduledStart;
+  saveData(state);
+  renderTasks();
+}
+
+function renderSchedule() {
+  const grid = document.getElementById('schGrid');
+  if (!grid) return;
+  if (!schedViewDate) schedViewDate = todayKey();
+
+  document.getElementById('schTitle').textContent =
+    formatDayLabel(schedViewDate) + ' · ' + getQuinzaine(schedViewDate);
+
+  grid.style.height = ((DAY_END - DAY_START) / 60 * HOUR_PX) + 'px';
+
+  let html = '';
+  for (let m = DAY_START; m < DAY_END; m += 60) {
+    const top = (m - DAY_START) / 60 * HOUR_PX;
+    html += `<div class="sch-hour" style="top:${top}px"><span>${m / 60}h</span></div>`;
+  }
+
+  getCoursesForDate(schedViewDate).forEach(c => {
+    const top = (c.s * 60 - DAY_START) / 60 * HOUR_PX;
+    const h = (c.e - c.s) * HOUR_PX - 2;
+    html += `<div class="sch-course" style="top:${top}px;height:${h}px">${escapeHtml(c.name)}</div>`;
+  });
+
+  state.tasks.forEach(t => {
+    if (t.dueDate !== schedViewDate || typeof t.scheduledStart !== 'number') return;
+    const color = subjectColor(t.subject);
+    const top = (t.scheduledStart - DAY_START) / 60 * HOUR_PX;
+    const h = Math.max(14, (t.duration || 30) / 60 * HOUR_PX - 2);
+    html += `<div class="sch-task" data-id="${t.id}" title="Toucher pour retirer" style="top:${top}px;height:${h}px;background:${color}33;border-color:${color};color:${color}">${escapeHtml(t.title)}</div>`;
+  });
+
+  grid.innerHTML = html;
+  grid.querySelectorAll('.sch-task').forEach(el => {
+    el.addEventListener('click', () => unscheduleTask(el.dataset.id));
+  });
+}
+
+function shiftScheduleDay(n) {
+  const d = parseDateKey(schedViewDate || todayKey());
+  d.setDate(d.getDate() + n);
+  schedViewDate = toDateKey(d);
+  renderSchedule();
+}
+
+function initSchedule() {
+  document.getElementById('schPrev').addEventListener('click', () => shiftScheduleDay(-1));
+  document.getElementById('schNext').addEventListener('click', () => shiftScheduleDay(1));
+  document.getElementById('schToggle').addEventListener('click', () => {
+    const sc = document.getElementById('schScroll');
+    const hidden = sc.classList.toggle('hidden');
+    document.getElementById('schToggle').textContent = hidden ? 'Afficher' : 'Réduire';
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSchedule);
+} else {
+  initSchedule();
+}
 
   function renderDate() {
     const d = new Date();
@@ -770,17 +976,7 @@ function enableDragReorder(list) {
     renderTasks();
   }
 
-function addTask(subject, title, dueDate) {
-  state.tasks.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-    subject,
-    title,
-    dueDate: dueDate || todayKey(),
-    done: false
-  });
-  saveData(state);
-  renderTasks();
-}
+https://chatgpt.com/c/6abbe504-1544-83eb-a00c-a03d070fc7f0#:~:text=function%20addTask(subject%2C%20title%2C%20dueDate%2C%20duration)%20%7B%0A%20%20state.tasks.push(%7B%0A%20%20%20%20id%3A%20Date.now().toString(36)%20%2B%20Math.random().toString(36).slice(2%2C%207)%2C%0A%20%20%20%20subject%2C%0A%20%20%20%20title%2C%0A%20%20%20%20dueDate%3A%20dueDate%20%7C%7C%20todayKey()%2C%0A%20%20%20%20duration%3A%20duration%20%7C%7C%2030%2C%0A%20%20%20%20done%3A%20false%0A%20%20%7D)%3B%0A%20%20saveData(state)%3B%0A%20%20renderTasks()%3B%0A%7D
 
   // Sheet (formulaire d'ajout)
   const sheetBackdrop = document.getElementById('sheetBackdrop');
