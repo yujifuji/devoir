@@ -756,7 +756,6 @@ function renderTasks() {
 
   const todayStr = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
 
-  // Comptage des devoirs du jour hors évaluations (détection de "eval" / "éval")
   const todayTasks = state.tasks.filter(t => (t.dueDate || todayStr) === todayStr);
   const nonEvalCount = todayTasks.filter(t => {
     const title = (t.title || '').toLowerCase();
@@ -769,25 +768,33 @@ function renderTasks() {
     </div>
   `;
 
+  const reviewHtml = reminderHtml(todayStr);
+
   if (state.tasks.length === 0) {
     list.innerHTML = `
+      ${reviewHtml}
       <div class="empty-state">
         <div class="emoji">📚</div>
         <p>Aucune tâche pour aujourd'hui.<br>Appuie sur + pour en ajouter une.</p>
       </div>
       ${suggestionHtml}`;
+    renderSchedule();
     updateProgress();
     return;
   }
 
-  // Afficher la suggestion en haut si 0 ou 1 devoir aujourd'hui (hors évals)
+  if (reviewHtml) {
+    const revWrapper = document.createElement('div');
+    revWrapper.innerHTML = reviewHtml;
+    list.appendChild(revWrapper);
+  }
+
   if (nonEvalCount <= 1) {
     const sugWrapper = document.createElement('div');
     sugWrapper.innerHTML = suggestionHtml;
     list.appendChild(sugWrapper);
   }
 
-  // Tri chronologique stable (les tâches sans date à la fin)
   const indexed = state.tasks.map((t, i) => ({ t, i }));
   indexed.sort((a, b) => {
     const da = a.t.dueDate || '9999-12-31';
@@ -797,7 +804,6 @@ function renderTasks() {
   });
   state.tasks = indexed.map(x => x.t);
 
-  // Groupement par date
   const groups = new Map();
   state.tasks.forEach(task => {
     const key = task.dueDate || '';
@@ -824,9 +830,13 @@ function renderTasks() {
       const el = document.createElement('div');
       el.className = 'task' + (task.done ? ' done' : '');
       const color = subjectColor(task.subject);
+      const durText = '⏱ ' + (task.duration || 30) + ' min';
+      const slotText = typeof task.scheduledStart === 'number'
+        ? ' · 🕒 ' + fmtMin(task.scheduledStart) + '–' + fmtMin(task.scheduledStart + (task.duration || 30))
+        : '';
       el.dataset.id = task.id;
       el.innerHTML = `
-        <div class="drag-handle" title="Glisser pour réordonner (dans le même jour)">
+        <div class="drag-handle" title="Glisser pour réordonner ou placer dans l'emploi du temps">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle>
             <circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle>
@@ -841,6 +851,7 @@ function renderTasks() {
         <div class="task-body">
           <div class="task-top">
             <span class="tag" style="background:${color}22; color:${color}">${task.subject}</span>
+            <span class="task-meta">${durText}${slotText}</span>
           </div>
           <div class="task-title">${escapeHtml(task.title)}</div>
         </div>
@@ -865,25 +876,58 @@ function renderTasks() {
   });
 
   enableDragReorder(list);
+  renderSchedule();
   updateProgress();
 }
-
 function enableDragReorder(list) {
   let draggedEl = null;
   let draggedGroup = null;
+  let dropStart = null;
 
   const commitOrder = () => {
-    // Reconstruit state.tasks selon l'ordre du DOM (groupes déjà triés par date)
     const newOrder = Array.from(list.querySelectorAll('.task')).map(el => el.dataset.id);
     state.tasks.sort((a, b) => newOrder.indexOf(String(a.id)) - newOrder.indexOf(String(b.id)));
     saveData(state);
   };
 
+  const clearPreview = () => {
+    const p = document.getElementById('schPreview');
+    if (p) p.remove();
+    dropStart = null;
+  };
+
+  const previewOnSchedule = (x, y) => {
+    const grid = document.getElementById('schGrid');
+    const under = document.elementFromPoint(x, y);
+    if (!grid || !under || !under.closest('#schGrid')) {
+      clearPreview();
+      return false;
+    }
+    const task = state.tasks.find(t => String(t.id) === String(draggedEl.dataset.id));
+    const dur = (task && task.duration) || 30;
+    const rect = grid.getBoundingClientRect();
+    let start = DAY_START + ((y - rect.top) / HOUR_PX) * 60;
+    start = Math.floor(start / SNAP) * SNAP;
+    const bad = findConflict(schedViewDate || todayKey(), start, dur, draggedEl.dataset.id);
+
+    let p = document.getElementById('schPreview');
+    if (!p) {
+      p = document.createElement('div');
+      p.id = 'schPreview';
+      grid.appendChild(p);
+    }
+    p.className = 'sch-preview' + (bad ? ' bad' : '');
+    p.style.top = ((start - DAY_START) / 60 * HOUR_PX) + 'px';
+    p.style.height = Math.max(14, dur / 60 * HOUR_PX) + 'px';
+    dropStart = bad ? null : start;
+    return true;
+  };
+
   const moveOver = (x, y) => {
     if (!draggedEl) return;
+    if (previewOnSchedule(x, y)) return;
     const target = document.elementFromPoint(x, y);
     const targetTask = target ? target.closest('.task') : null;
-    // Uniquement au sein du même groupe de date
     if (targetTask && targetTask !== draggedEl && targetTask.parentElement === draggedGroup) {
       const rect = targetTask.getBoundingClientRect();
       const before = y < rect.top + rect.height / 2;
@@ -900,9 +944,16 @@ function enableDragReorder(list) {
   const end = () => {
     if (!draggedEl) return;
     draggedEl.classList.remove('dragging');
-    commitOrder();
+    const id = draggedEl.dataset.id;
+    const slot = dropStart;
+    clearPreview();
     draggedEl = null;
     draggedGroup = null;
+    if (slot !== null) {
+      scheduleTask(id, schedViewDate || todayKey(), slot);
+    } else {
+      commitOrder();
+    }
   };
 
   list.querySelectorAll('.drag-handle').forEach(handle => {
@@ -1035,28 +1086,18 @@ function openSheet() {
   });
   taskInput.addEventListener('input', validateForm);
   
-  btnAdd.addEventListener('click', () => {
+btnAdd.addEventListener('click', () => {
   if (selectedSubject && taskInput.value.trim()) {
     const dateInput = document.getElementById('task-due-date');
+    const durInput = document.getElementById('taskDuration');
     const dueDate = dateInput && dateInput.value ? dateInput.value : todayKey();
+    const duration = Math.min(240, Math.max(5, parseInt(durInput && durInput.value, 10) || 30));
 
-    addTask(selectedSubject, taskInput.value.trim(), dueDate);
+    addTask(selectedSubject, taskInput.value.trim(), dueDate, duration);
+    if (durInput) durInput.value = 30;
     closeSheet();
   }
 });
-
-  // Support d'un raccourci iOS : devoirs.html?matiere=Maths&tache=Exercices%203
-  function handleUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const matiere = params.get('matiere');
-    const tache = params.get('tache');
-    if (matiere && tache) {
-      const validSubject = SUBJECTS.find(s => s.name.toLowerCase() === matiere.toLowerCase());
-      addTask(validSubject ? validSubject.name : 'Autre', tache);
-      // Nettoie l'URL pour éviter les doublons si on rafraîchit
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }
 
   renderDate();
   renderTasks();
