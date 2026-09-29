@@ -1027,8 +1027,6 @@ function enableDragReorder(list) {
     renderTasks();
   }
 
-https://chatgpt.com/c/6abbe504-1544-83eb-a00c-a03d070fc7f0#:~:text=function%20addTask(subject%2C%20title%2C%20dueDate%2C%20duration)%20%7B%0A%20%20state.tasks.push(%7B%0A%20%20%20%20id%3A%20Date.now().toString(36)%20%2B%20Math.random().toString(36).slice(2%2C%207)%2C%0A%20%20%20%20subject%2C%0A%20%20%20%20title%2C%0A%20%20%20%20dueDate%3A%20dueDate%20%7C%7C%20todayKey()%2C%0A%20%20%20%20duration%3A%20duration%20%7C%7C%2030%2C%0A%20%20%20%20done%3A%20false%0A%20%20%7D)%3B%0A%20%20saveData(state)%3B%0A%20%20renderTasks()%3B%0A%7D
-
   // Sheet (formulaire d'ajout)
   const sheetBackdrop = document.getElementById('sheetBackdrop');
   const taskInput = document.getElementById('taskInput');
