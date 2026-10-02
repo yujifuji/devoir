@@ -9,7 +9,6 @@
     --bg: #14171c;
     --bg-soft: #1b1f26;
     --card: #21262f;
-    --card-done: #191d23;
     --border: #2c323d;
     --ink: #f2f0eb;
     --ink-dim: #8b93a1;
@@ -31,40 +30,39 @@
     overscroll-behavior-y: none;
   }
 
+  /* ---------- Structure plein écran ---------- */
   #app {
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
   header {
-    padding: 22px 20px 14px;
+    flex: none;
+    padding: 12px 16px 10px;
     background: linear-gradient(180deg, var(--bg-soft), var(--bg));
     border-bottom: 1px solid var(--border);
   }
 
   .date-label {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--ink-dim);
     text-transform: capitalize;
     letter-spacing: 0.02em;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   h1 {
-    font-size: 26px;
+    font-size: 20px;
     font-weight: 800;
-    margin: 0 0 14px;
+    margin: 0 0 8px;
     letter-spacing: -0.02em;
   }
 
-  .progress-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .progress-row { display: flex; align-items: center; gap: 10px; }
 
   .progress-track {
     flex: 1;
@@ -76,10 +74,10 @@
 
   .progress-fill {
     height: 100%;
+    width: 0%;
     background: linear-gradient(90deg, var(--accent), var(--ok));
     border-radius: 99px;
     transition: width 0.35s ease;
-    width: 0%;
   }
 
   .progress-text {
@@ -98,170 +96,257 @@
     font-size: 12px;
     font-weight: 700;
     color: var(--accent);
-    margin-top: 10px;
+    margin-top: 6px;
   }
   .streak-badge.visible { display: inline-flex; }
 
-  main {
-    flex: 1;
-    padding: 16px 16px 100px;
-    overflow-y: auto;
+  /* ---------- Boîte de réception ---------- */
+  #inbox {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    max-height: 30vh;
+    max-height: 30dvh;
+    margin: 10px 12px 0;
+    padding: 10px 12px 12px;
+    border: 2px dashed rgba(255, 180, 84, 0.5);
+    border-radius: 16px;
+    background: rgba(255, 180, 84, 0.07);
   }
-  
-  .empty-state {
+
+  .inbox-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex: none; }
+  .inbox-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; }
+  .inbox-title small { display: block; margin-top: 1px; font-size: 11px; font-weight: 500; color: var(--ink-dim); }
+
+  #inboxCount {
+    min-width: 22px;
+    padding: 2px 8px;
     text-align: center;
-    padding: 60px 20px;
-    color: var(--ink-dim);
-  }
-
-  .empty-state .emoji { font-size: 40px; margin-bottom: 10px; }
-  .empty-state p { font-size: 15px; line-height: 1.5; margin: 0; }
-
-  .task {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 14px;
-    margin-bottom: 10px;
-    transition: background 0.2s ease, opacity 0.2s ease, transform 0.15s ease;
-  }
-
-  .task:active { transform: scale(0.985); }
-
-  .task.done {
-    background: var(--card-done);
-    opacity: 0.55;
-  }
-
-  .task.dragging {
-    opacity: 0.4;
-    border-color: var(--accent);
-  }
-
-  .drag-handle {
-    flex-shrink: 0;
-    width: 22px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink-dim);
-    cursor: grab;
-    touch-action: none;
-    margin-top: 2px;
-  }
-  .drag-handle:active { cursor: grabbing; }
-
-  .checkbox {
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    border: 2px solid var(--ink-dim);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 2px;
-    transition: all 0.15s ease;
-    cursor: pointer;
-  }
-
-  .checkbox.checked {
-    background: var(--ok);
-    border-color: var(--ok);
-  }
-
-  @keyframes pop {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.25); }
-    100% { transform: scale(1); }
-  }
-
-  .checkbox.pop { animation: pop 0.28s ease; }
-
-  .checkbox svg { width: 15px; height: 15px; display: none; }
-  .checkbox.checked svg { display: block; }
-
-  .task-body { flex: 1; min-width: 0; }
-  
-  .due-date {
-    font-size: 11px;
-    color: #8a8f98;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-  
-  .task-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-    flex-wrap: wrap;
-  }
-
-  .tag {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
     border-radius: 99px;
-    letter-spacing: 0.02em;
+    background: var(--card);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
   }
 
-  .task-title {
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.35;
-    word-break: break-word;
-  }
-
-  .task.done .task-title {
-    text-decoration: line-through;
-    color: var(--ink-dim);
-  }
-
-  .task-delete {
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink-dim);
-    background: none;
+  .add-btn {
+    flex: none;
+    width: 34px;
+    height: 34px;
     border: none;
-    cursor: pointer;
-    border-radius: 8px;
-  }
-  .task-delete:active { background: rgba(255,107,107,0.15); color: var(--danger); }
-
-  .fab {
-    position: fixed;
-    right: 20px;
-    bottom: calc(24px + env(safe-area-inset-bottom));
-    width: 58px;
-    height: 58px;
     border-radius: 50%;
     background: var(--accent);
     color: #1b1206;
-    border: none;
-    font-size: 30px;
-    font-weight: 400;
-    box-shadow: 0 8px 24px rgba(255,180,84,0.35);
+    font-size: 22px;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 20;
   }
-  .fab:active { transform: scale(0.94); }
+  .add-btn:active { transform: scale(0.92); }
 
+  .inbox-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    overflow-y: auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .inbox-empty { font-size: 13px; color: var(--ink-dim); padding: 4px 2px; }
+
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 100%;
+    padding: 7px 28px 7px 10px;
+    border-radius: 12px;
+    border-left: 4px solid;
+    font-size: 12px;
+    line-height: 1.25;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .tile.dragging { opacity: 0.3; }
+  .tile-subject { font-size: 11px; font-weight: 700; }
+  .tile-title { font-size: 13px; font-weight: 600; word-break: break-word; }
+  .tile-meta { font-size: 11px; color: var(--ink-dim); }
+  .tile-meta.late { color: var(--danger); font-weight: 600; }
+
+  .tile-del {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--ink-dim);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .tile-del:active { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
+
+  .drag-ghost {
+    position: fixed;
+    z-index: 1000;
+    margin: 0;
+    pointer-events: none;
+    opacity: 0.95;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transform: translate(-50%, -115%) scale(1.04);
+  }
+
+  /* ---------- Emploi du temps ---------- */
+  #schedulePanel {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 10px 12px 12px;
+    background: var(--bg);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .sch-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .sch-head button { background: none; border: none; color: inherit; font-size: 20px; padding: 2px 10px; cursor: pointer; }
+  #schTitle { flex: 1; min-width: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+
+  #schReview {
+    flex: none;
+    padding: 0 12px 6px;
+    font-size: 12px;
+    color: var(--ink-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #schReview:empty { display: none; }
+
+  .sch-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .sch-grid { position: relative; margin-left: 44px; margin-right: 10px; }
+
+  .sch-hour { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+  .sch-hour span { position: absolute; left: -40px; top: -8px; width: 34px; text-align: right; font-size: 11px; color: var(--ink-dim); }
+
+  .sch-course {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--ink-dim);
+    background: rgba(255, 255, 255, 0.07);
+    border-left: 3px solid rgba(255, 255, 255, 0.22);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .sch-task {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 3px 6px;
+    border: 1px solid;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  .sch-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .sch-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sch-sub { font-size: 11px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sch-task.done { opacity: 0.6; }
+  .sch-task.done .sch-title { text-decoration: line-through; }
+
+  .sch-check {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    padding: 0;
+    border: 2px solid var(--c);
+    border-radius: 6px;
+    background: transparent;
+    color: #14171c;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .sch-task.done .sch-check { background: var(--c); }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .sch-check.pop { animation: pop 0.28s ease; }
+
+  .sch-unplace {
+    flex: none;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: var(--ink-dim);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .sch-drop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 2px 8px;
+    border: 2px dashed var(--accent);
+    border-radius: 8px;
+    background: rgba(255, 180, 84, 0.25);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .sch-drop.bad { border-color: var(--danger); background: rgba(255, 107, 107, 0.25); color: var(--danger); }
+
+  /* ---------- Formulaire d'ajout ---------- */
   .sheet-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.55);
+    background: rgba(0, 0, 0, 0.55);
     display: none;
     align-items: flex-end;
     z-index: 30;
@@ -271,15 +356,15 @@
   .sheet {
     background: var(--bg-soft);
     width: 100%;
+    max-height: 92vh;
+    max-height: 92dvh;
+    overflow-y: auto;
     border-radius: 22px 22px 0 0;
     padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
   }
 
-  .sheet h2 {
-    font-size: 18px;
-    margin: 0 0 16px;
-  }
+  .sheet h2 { font-size: 18px; margin: 0 0 16px; }
 
   .field-label {
     font-size: 12px;
@@ -291,25 +376,37 @@
     display: block;
   }
 
-  input[type="text"] {
+  .field-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    text-transform: none;
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+  .field-checkbox input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"] {
     width: 100%;
     background: var(--card);
     border: 1px solid var(--border);
     color: var(--ink);
+    color-scheme: dark;
     border-radius: 12px;
     padding: 13px 14px;
     font-size: 16px;
     margin-bottom: 16px;
     font-family: inherit;
   }
-  input[type="text"]:focus { outline: 2px solid var(--accent); }
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  input[type="date"]:focus { outline: 2px solid var(--accent); }
 
-  .subject-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
+  .subject-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 
   .subject-chip {
     padding: 8px 14px;
@@ -321,9 +418,7 @@
     font-weight: 700;
     cursor: pointer;
   }
-  .subject-chip.selected {
-    color: #14171c;
-  }
+  .subject-chip.selected { color: #14171c; }
 
   .sheet-buttons { display: flex; gap: 10px; }
 
@@ -340,37 +435,6 @@
   .btn-cancel { background: var(--card); color: var(--ink-dim); }
   .btn-add { background: var(--accent); color: #1b1206; }
   .btn-add:disabled { opacity: 0.4; }
-
-  .smart-tip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 12px;
-  padding: 12px 14px;
-  background: #fff8e1;
-  border-left: 4px solid #ffc107;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  color: #6b5200;
-  }
-  .smart-tip .tip-icon { font-size: 1.3rem; }
-  .smart-tip p { margin: 0; }
-  #schedulePanel{position:sticky;top:0;z-index:20;margin:0 0 12px;background:var(--bg,#14171c);border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden}
-.sch-head{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;font-weight:600}
-.sch-head button{background:none;border:none;color:inherit;font-size:18px;padding:2px 8px;cursor:pointer}
-#schTitle{flex:1;text-align:center}
-#schToggle{font-size:12px!important}
-.sch-scroll{max-height:36vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.sch-scroll.hidden{display:none}
-.sch-grid{position:relative;margin-left:36px;margin-right:8px}
-.sch-hour{position:absolute;left:0;right:0;height:0;border-top:1px solid rgba(255,255,255,.1)}
-.sch-hour span{position:absolute;left:-32px;top:-8px;font-size:11px;opacity:.6}
-.sch-course{position:absolute;left:0;right:0;padding:4px 8px;box-sizing:border-box;font-size:12px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
-.sch-task{position:absolute;left:12%;right:0;padding:2px 8px;box-sizing:border-box;font-size:11px;border:1px solid;border-radius:8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.sch-preview{position:absolute;left:12%;right:0;border-radius:8px;background:rgba(255,180,84,.3);border:2px dashed var(--accent);pointer-events:none;z-index:5}
-.sch-preview.bad{background:rgba(255,80,80,.3);border-color:#ff5050}
-.review-card{margin-bottom:15px;padding:12px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.5);border-radius:12px;font-size:14px}
-.task-meta{font-size:12px;opacity:.75;margin-left:8px}
 </style>
 </head>
 <body>
@@ -385,32 +449,38 @@
     <div class="streak-badge" id="streakBadge">🔥 <span id="streakCount"></span> jours d'affilée</div>
   </header>
 
+  <section id="inbox" aria-label="Boîte de réception">
+    <div class="inbox-head">
+      <div class="inbox-title">📥 À placer<small>Glisse une tuile sur l'emploi du temps</small></div>
+      <span id="inboxCount">0</span>
+      <button class="add-btn" id="fabAdd" aria-label="Ajouter une tâche">+</button>
+    </div>
+    <div class="inbox-tiles" id="inboxTiles"></div>
+  </section>
+
   <section id="schedulePanel">
     <div class="sch-head">
       <button id="schPrev" aria-label="Jour précédent">‹</button>
-      <div id="schTitle"></div>
+      <div id="schTitle" title="Revenir à aujourd'hui"></div>
       <button id="schNext" aria-label="Jour suivant">›</button>
-      <button id="schToggle">Réduire</button>
     </div>
+    <div id="schReview"></div>
     <div class="sch-scroll" id="schScroll">
       <div class="sch-grid" id="schGrid"></div>
     </div>
   </section>
-
-  <main id="taskList"></main>
-
-  <button class="fab" id="fabAdd" aria-label="Ajouter">+</button>
 
   <div class="sheet-backdrop" id="sheetBackdrop">
     <div class="sheet">
       <h2>Nouvelle tâche</h2>
       <label class="field-label">Matière</label>
       <div class="subject-grid" id="subjectGrid"></div>
-      <label class="field-label">Description</label>
+      <label class="field-label" for="taskInput">Description</label>
       <input type="text" id="taskInput" placeholder="Ex: Exercices 3 et 4 page 52" autocomplete="off">
-      <label class="field-label">Durée estimée (minutes)</label>
+      <label class="field-label" for="taskDuration">Durée estimée (minutes)</label>
       <input type="number" id="taskDuration" min="5" max="240" step="5" value="30" inputmode="numeric">
-      <input type="date" id="task-due-date" />
+      <label class="field-label" for="task-due-date">Pour le (aujourd'hui par défaut)</label>
+      <input type="date" id="task-due-date">
       <label class="field-label field-checkbox">
         <input type="checkbox" id="taskRecurring">
         Répéter chaque jour
@@ -422,6 +492,7 @@
     </div>
   </div>
 </div>
+
 <script>
   const SUBJECTS = [
     { name: "📐Maths", color: "#7aa2f7" },
@@ -435,108 +506,18 @@
     
   ];
 
-  const STORAGE_KEY = "devoirs_today_v1";
-  const STREAK_KEY = "devoirs_streak_log_v1";
-  let selectedSubject = null;
+const STORAGE_KEY = "devoirs_today_v1";
+const STREAK_KEY = "devoirs_streak_log_v1";
+let selectedSubject = null;
 
-  function loadStreakLog() {
-    try {
-      const raw = localStorage.getItem(STREAK_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function saveStreakLog(log) {
-    try {
-      localStorage.setItem(STREAK_KEY, JSON.stringify(log));
-    } catch (e) {
-      console.error("Erreur de sauvegarde du streak", e);
-    }
-  }
-
-  // Marque le jour actuel comme "complet" si toutes les tâches sont cochées
-function updateStreak() {
-  const log = loadStreakLog();
-  const today = todayKey();
-  const relevantTasks = state.tasks.filter(t => t.dueDate === today);
-  const total = relevantTasks.length;
-  const done = relevantTasks.filter(t => t.done).length;
-  log[today] = total > 0 && done === total;
-  saveStreakLog(log);
-}
-
-  // Compte les jours consécutifs (en remontant depuis aujourd'hui ou hier) où tout était coché
-  function computeStreak() {
-    const log = loadStreakLog();
-    let streak = 0;
-    let cursor = new Date();
-
-    // Si aujourd'hui n'est pas encore complet, on commence à compter depuis hier
-    // (pour ne pas casser la série avant la fin de la journée)
-    if (!log[todayKey()]) {
-      cursor.setDate(cursor.getDate() - 1);
-    }
-
-    while (true) {
-      const key = cursor.toISOString().slice(0, 10);
-      if (log[key]) {
-        streak++;
-        cursor.setDate(cursor.getDate() - 1);
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
-
-  function renderStreak() {
-    const streak = computeStreak();
-    const badge = document.getElementById('streakBadge');
-    const count = document.getElementById('streakCount');
-    if (streak >= 2) {
-      count.textContent = streak;
-      badge.classList.add('visible');
-    } else {
-      badge.classList.remove('visible');
-    }
-  }
-
-  function todayKey() {
-    const d = new Date();
-    return d.toISOString().slice(0, 10);
-  }
-
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { date: todayKey(), tasks: [] };
-    const data = JSON.parse(raw);
-    if (data.date !== todayKey()) {
-      return { date: todayKey(), tasks: data.tasks.filter(t => !t.done) };
-    }
-    return data;
-  } catch (e) {
-    return { date: todayKey(), tasks: [] };
-  }
-}
-
-  function saveData(data) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error("Erreur de sauvegarde", e);
-    }
-  }
-
-  let state = loadData();
-  const Q1_REF_MONDAY = '2026-09-28';
+/* ---------- Emploi du temps : données ---------- */
+const Q1_REF_MONDAY = '2026-09-28';
 const NO_REVIEW = ['EPS', 'Vie de classe'];
 const DAY_START = 8 * 60;
 const DAY_END = 18 * 60;
-const HOUR_PX = 44;
+const MIN_HOUR_PX = 48;
 const SNAP = 15;
+let HOUR_PX = MIN_HOUR_PX;
 
 const SCHEDULE = {
   1: [
@@ -576,7 +557,9 @@ const SCHEDULE = {
 };
 
 let schedViewDate = null;
+let isDragging = false;
 
+/* ---------- Dates ---------- */
 function parseDateKey(key) {
   const p = key.split('-').map(Number);
   return new Date(p[0], p[1] - 1, p[2]);
@@ -584,6 +567,10 @@ function parseDateKey(key) {
 
 function toDateKey(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function todayKey() {
+  return toDateKey(new Date());
 }
 
 function mondayOf(d) {
@@ -611,43 +598,296 @@ function getReviewCourses(dateKey) {
   return names;
 }
 
-function reminderHtml(dateKey) {
-  const names = getReviewCourses(dateKey);
-  if (!names.length) return '';
-  return `<div class="review-card">📖 <strong>Cours du jour à relire :</strong> ${names.map(escapeHtml).join(' · ')}</div>`;
-}
-
 function fmtMin(m) {
   return String(Math.floor(m / 60)).padStart(2, '0') + 'h' + String(m % 60).padStart(2, '0');
 }
 
-function findConflict(dateKey, start, dur, ignoreId) {
+function formatDueDate(dueDate) {
+  if (!dueDate) return '';
+  const diff = Math.round((parseDateKey(dueDate) - parseDateKey(todayKey())) / 86400000);
+  if (diff === 0) return "Aujourd'hui";
+  if (diff === 1) return 'Demain';
+  if (diff === -1) return 'Hier';
+  const d = parseDateKey(dueDate);
+  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function formatDayLabel(dateStr) {
+  if (!dateStr) return 'Sans date';
+  const date = parseDateKey(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((date - today) / 86400000);
+  const full = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (diff === 0) return "Aujourd'hui · " + full;
+  if (diff === 1) return 'Demain · ' + full;
+  if (diff === -1) return 'Hier · ' + full;
+  return full.charAt(0).toUpperCase() + full.slice(1);
+}
+
+function renderDate() {
+  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('fr-FR', opts);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+function subjectColor(name) {
+  const s = SUBJECTS.find(s => s.name === name);
+  return s ? s.color : "#8b93a1";
+}
+
+/* Jour auquel une tâche compte : son créneau si elle est placée, sinon son échéance */
+function taskDay(t) {
+  return (typeof t.scheduledStart === 'number' && t.scheduledDate) ? t.scheduledDate : t.dueDate;
+}
+
+/* ---------- Conflits de créneau ---------- */
+function findConflict(dateKey, start, dur, ignoreId, tasks) {
   const end = start + dur;
   if (start < DAY_START || end > DAY_END) return true;
+  const pool = tasks || state.tasks;
   const busy = getCoursesForDate(dateKey).map(c => [c.s * 60, c.e * 60]);
-  state.tasks.forEach(t => {
-    if (String(t.id) !== String(ignoreId) && t.dueDate === dateKey && typeof t.scheduledStart === 'number') {
+  pool.forEach(t => {
+    if (String(t.id) !== String(ignoreId) && t.scheduledDate === dateKey && typeof t.scheduledStart === 'number') {
       busy.push([t.scheduledStart, t.scheduledStart + (t.duration || 30)]);
     }
   });
   return busy.some(b => start < b[1] && end > b[0]);
 }
 
+/* ---------- Données ---------- */
+function rolloverTasks(tasks, today) {
+  return tasks
+    .filter(t => t.recurring || !t.done || (taskDay(t) || today) >= today)
+    .map(t => {
+      const n = Object.assign({}, t);
+      if (n.recurring) {
+        n.done = false;
+        n.dueDate = today;
+        if (typeof n.scheduledStart === 'number' && !findConflict(today, n.scheduledStart, n.duration || 30, n.id, [])) {
+          n.scheduledDate = today;
+        } else {
+          delete n.scheduledStart;
+          delete n.scheduledDate;
+        }
+      } else if (!n.done && typeof n.scheduledStart === 'number' && n.scheduledDate && n.scheduledDate < today) {
+        delete n.scheduledStart;
+        delete n.scheduledDate;
+      }
+      return n;
+    });
+}
+
+function loadData() {
+  const today = todayKey();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { date: today, tasks: [] };
+    const data = JSON.parse(raw);
+    let tasks = Array.isArray(data.tasks) ? data.tasks : [];
+    tasks = tasks.map(t => {
+      if (typeof t.scheduledStart === 'number' && !t.scheduledDate) {
+        return Object.assign({}, t, { scheduledDate: t.dueDate || today });
+      }
+      return t;
+    });
+    if (data.date !== today) tasks = rolloverTasks(tasks, today);
+    return { date: today, tasks };
+  } catch (e) {
+    return { date: today, tasks: [] };
+  }
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error("Erreur de sauvegarde", e);
+  }
+}
+
+let state = loadData();
+
+/* ---------- Série de jours ---------- */
+function loadStreakLog() {
+  try {
+    const raw = localStorage.getItem(STREAK_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveStreakLog(log) {
+  try {
+    localStorage.setItem(STREAK_KEY, JSON.stringify(log));
+  } catch (e) {
+    console.error("Erreur de sauvegarde du streak", e);
+  }
+}
+
+function updateStreak() {
+  const log = loadStreakLog();
+  const today = todayKey();
+  const relevant = state.tasks.filter(t => taskDay(t) === today);
+  const done = relevant.filter(t => t.done).length;
+  log[today] = relevant.length > 0 && done === relevant.length;
+  saveStreakLog(log);
+}
+
+function computeStreak() {
+  const log = loadStreakLog();
+  let streak = 0;
+  const cursor = new Date();
+  if (!log[todayKey()]) cursor.setDate(cursor.getDate() - 1);
+  while (log[toDateKey(cursor)]) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+function renderStreak() {
+  const streak = computeStreak();
+  const badge = document.getElementById('streakBadge');
+  if (streak >= 2) {
+    document.getElementById('streakCount').textContent = streak;
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
+  }
+}
+
+function updateProgress() {
+  const today = todayKey();
+  const relevant = state.tasks.filter(t => taskDay(t) === today);
+  const total = relevant.length;
+  const done = relevant.filter(t => t.done).length;
+  document.getElementById('progressFill').style.width = (total === 0 ? 0 : Math.round(done / total * 100)) + '%';
+  document.getElementById('progressText').textContent = done + '/' + total;
+}
+
+/* ---------- Actions sur les tâches ---------- */
+function addTask(subject, title, dueDate, duration, recurring) {
+  state.tasks.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    subject,
+    title,
+    dueDate: dueDate || todayKey(),
+    duration: duration || 30,
+    recurring: !!recurring,
+    done: false
+  });
+  saveData(state);
+  updateStreak();
+  renderTasks();
+  renderStreak();
+}
+
 function scheduleTask(id, dateKey, start) {
   const t = state.tasks.find(x => String(x.id) === String(id));
   if (!t) return;
-  t.dueDate = dateKey;
+  t.scheduledDate = dateKey;
   t.scheduledStart = start;
   saveData(state);
+  updateStreak();
   renderTasks();
+  renderStreak();
 }
 
 function unscheduleTask(id) {
   const t = state.tasks.find(x => String(x.id) === String(id));
   if (!t) return;
   delete t.scheduledStart;
+  delete t.scheduledDate;
+  t.done = false;
   saveData(state);
+  updateStreak();
   renderTasks();
+  renderStreak();
+}
+
+function toggleTask(id) {
+  const t = state.tasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  t.done = !t.done;
+  if (t.done && navigator.vibrate) navigator.vibrate(15);
+  saveData(state);
+  updateStreak();
+  renderTasks();
+  renderStreak();
+  if (t.done) {
+    const cb = document.querySelector('.sch-task[data-id="' + id + '"] .sch-check');
+    if (cb) {
+      cb.classList.add('pop');
+      setTimeout(() => cb.classList.remove('pop'), 300);
+    }
+  }
+}
+
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(x => String(x.id) !== String(id));
+  saveData(state);
+  updateStreak();
+  renderTasks();
+  renderStreak();
+}
+
+/* ---------- Rendu ---------- */
+function renderTasks() {
+  renderInbox();
+  renderSchedule();
+  updateProgress();
+}
+
+function renderInbox() {
+  const box = document.getElementById('inboxTiles');
+  if (!box) return;
+  const today = todayKey();
+  const pending = state.tasks
+    .filter(t => !t.done && typeof t.scheduledStart !== 'number')
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => {
+      const da = a.t.dueDate || '9999-12-31';
+      const db = b.t.dueDate || '9999-12-31';
+      return da === db ? a.i - b.i : (da < db ? -1 : 1);
+    })
+    .map(x => x.t);
+
+  document.getElementById('inboxCount').textContent = pending.length;
+
+  if (!pending.length) {
+    box.innerHTML = '<div class="inbox-empty">' +
+      (state.tasks.length === 0 ? 'Aucune tâche. Appuie sur + pour en ajouter une.' : 'Tout est placé ✨') +
+      '</div>';
+  } else {
+    box.innerHTML = pending.map(t => {
+      const color = subjectColor(t.subject);
+      const late = !!t.dueDate && t.dueDate < today;
+      const meta = '⏱ ' + (t.duration || 30) + ' min' +
+        (t.dueDate ? ' · ' + (late ? '⚠️ ' : '📅 ') + escapeHtml(formatDueDate(t.dueDate)) : '') +
+        (t.recurring ? ' · 🔁' : '');
+      return `<div class="tile" data-id="${t.id}" style="border-left-color:${color};background:${color}22">
+        <span class="tile-subject" style="color:${color}">${escapeHtml(t.subject)}</span>
+        <span class="tile-title">${escapeHtml(t.title)}</span>
+        <span class="tile-meta${late ? ' late' : ''}">${meta}</span>
+        <button class="tile-del" aria-label="Supprimer la tâche">×</button>
+      </div>`;
+    }).join('');
+  }
+  enableDragReorder(box);
+}
+
+function fitHourPx() {
+  const sc = document.getElementById('schScroll');
+  const hours = (DAY_END - DAY_START) / 60;
+  const avail = sc.clientHeight - 20;
+  HOUR_PX = Math.max(MIN_HOUR_PX, Math.floor(avail / hours));
 }
 
 function renderSchedule() {
@@ -658,6 +898,10 @@ function renderSchedule() {
   document.getElementById('schTitle').textContent =
     formatDayLabel(schedViewDate) + ' · ' + getQuinzaine(schedViewDate);
 
+  const review = getReviewCourses(schedViewDate);
+  document.getElementById('schReview').textContent = review.length ? '📖 À relire : ' + review.join(' · ') : '';
+
+  fitHourPx();
   grid.style.height = ((DAY_END - DAY_START) / 60 * HOUR_PX) + 'px';
 
   let html = '';
@@ -673,17 +917,20 @@ function renderSchedule() {
   });
 
   state.tasks.forEach(t => {
-    if (t.dueDate !== schedViewDate || typeof t.scheduledStart !== 'number') return;
+    if (typeof t.scheduledStart !== 'number' || t.scheduledDate !== schedViewDate) return;
     const color = subjectColor(t.subject);
+    const dur = t.duration || 30;
     const top = (t.scheduledStart - DAY_START) / 60 * HOUR_PX;
-    const h = Math.max(14, (t.duration || 30) / 60 * HOUR_PX - 2);
-    html += `<div class="sch-task" data-id="${t.id}" title="Toucher pour retirer" style="top:${top}px;height:${h}px;background:${color}33;border-color:${color};color:${color}">${escapeHtml(t.title)}</div>`;
+    const h = Math.max(28, dur / 60 * HOUR_PX - 2);
+    const sub = h >= 46 ? `<span class="sch-sub">${escapeHtml(t.subject)} · ${fmtMin(t.scheduledStart)}–${fmtMin(t.scheduledStart + dur)}</span>` : '';
+    html += `<div class="sch-task${t.done ? ' done' : ''}" data-id="${t.id}" style="top:${top}px;height:${h}px;background:${color}33;border-color:${color};color:${color};--c:${color}">
+      <button class="sch-check" aria-label="${t.done ? 'Marquer comme non fait' : 'Marquer comme fait'}">${t.done ? '✓' : ''}</button>
+      <div class="sch-body"><span class="sch-title">${escapeHtml(t.title)}</span>${sub}</div>
+      <button class="sch-unplace" aria-label="Remettre dans la boîte de réception" title="Remettre dans la boîte">×</button>
+    </div>`;
   });
 
   grid.innerHTML = html;
-  grid.querySelectorAll('.sch-task').forEach(el => {
-    el.addEventListener('click', () => unscheduleTask(el.dataset.id));
-  });
 }
 
 function shiftScheduleDay(n) {
@@ -696,411 +943,244 @@ function shiftScheduleDay(n) {
 function initSchedule() {
   document.getElementById('schPrev').addEventListener('click', () => shiftScheduleDay(-1));
   document.getElementById('schNext').addEventListener('click', () => shiftScheduleDay(1));
-  document.getElementById('schToggle').addEventListener('click', () => {
-    const sc = document.getElementById('schScroll');
-    const hidden = sc.classList.toggle('hidden');
-    document.getElementById('schToggle').textContent = hidden ? 'Afficher' : 'Réduire';
-  });
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initSchedule);
-} else {
-  initSchedule();
-}
-
-  function renderDate() {
-    const d = new Date();
-    const opts = { weekday: 'long', day: 'numeric', month: 'long' };
-    document.getElementById('dateLabel').textContent = d.toLocaleDateString('fr-FR', opts);
-  }
-
-  function subjectColor(name) {
-    const s = SUBJECTS.find(s => s.name === name);
-    return s ? s.color : "#8b93a1";
-  }
-
-  function formatDueDate(dueDate) {
-  if (!dueDate) return '';
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const due = new Date(dueDate);
-  due.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((due - today) / 86400000);
-
-  if (diffDays === 0) return 'Aujourd\'hui';
-  if (diffDays === 1) return 'Demain';
-
-  const dd = String(due.getDate()).padStart(2, '0');
-  const mm = String(due.getMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}`;
-}
-
-function formatDayLabel(dateStr) {
-  if (!dateStr) return 'Sans date';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.round((date - today) / 86400000);
-  const full = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-  if (diff === 0) return "Aujourd'hui · " + full;
-  if (diff === 1) return 'Demain · ' + full;
-  if (diff === -1) return 'Hier · ' + full;
-  return full.charAt(0).toUpperCase() + full.slice(1);
-}
-
-function renderTasks() {
-  const list = document.getElementById('taskList');
-  list.innerHTML = '';
-
-  const todayStr = typeof todayKey === 'function' ? todayKey() : new Date().toISOString().slice(0, 10);
-
-  const todayTasks = state.tasks.filter(t => (t.dueDate || todayStr) === todayStr);
-  const nonEvalCount = todayTasks.filter(t => {
-    const title = (t.title || '').toLowerCase();
-    return !title.includes('eval') && !title.includes('éval');
-  }).length;
-
-  const suggestionHtml = `
-    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,180,84,0.1); border: 1px solid var(--accent); border-radius: 12px; color: var(--accent); font-size: 14px; text-align: center;">
-      <strong>💡 Suggestion :</strong> Journée plutôt calme. Profites-en pour faire quelques exercices !
-    </div>
-  `;
-
-  const reviewHtml = reminderHtml(todayStr);
-
-  if (state.tasks.length === 0) {
-    list.innerHTML = `
-      ${reviewHtml}
-      <div class="empty-state">
-        <div class="emoji">📚</div>
-        <p>Aucune tâche pour aujourd'hui.<br>Appuie sur + pour en ajouter une.</p>
-      </div>
-      ${suggestionHtml}`;
+  document.getElementById('schTitle').addEventListener('click', () => {
+    schedViewDate = todayKey();
     renderSchedule();
-    updateProgress();
-    return;
-  }
-
-  if (reviewHtml) {
-    const revWrapper = document.createElement('div');
-    revWrapper.innerHTML = reviewHtml;
-    list.appendChild(revWrapper);
-  }
-
-  if (nonEvalCount <= 1) {
-    const sugWrapper = document.createElement('div');
-    sugWrapper.innerHTML = suggestionHtml;
-    list.appendChild(sugWrapper);
-  }
-
-  const indexed = state.tasks.map((t, i) => ({ t, i }));
-  indexed.sort((a, b) => {
-    const da = a.t.dueDate || '9999-12-31';
-    const db = b.t.dueDate || '9999-12-31';
-    if (da !== db) return da < db ? -1 : 1;
-    return a.i - b.i;
-  });
-  state.tasks = indexed.map(x => x.t);
-
-  const groups = new Map();
-  state.tasks.forEach(task => {
-    const key = task.dueDate || '';
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(task);
   });
 
-  groups.forEach((tasks, dateKey) => {
-    const group = document.createElement('div');
-    group.className = 'task-group';
-    group.dataset.date = dateKey;
-
-    const header = document.createElement('div');
-    header.className = 'group-header';
-    header.style.cssText =
-      'font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;' +
-      'opacity:.7;margin:18px 4px 8px;display:flex;align-items:center;gap:8px;';
-    header.innerHTML = `<span>${escapeHtml(formatDayLabel(dateKey))}</span>
-      <span style="flex:1;height:1px;background:currentColor;opacity:.15"></span>
-      <span style="font-weight:400;opacity:.8">${tasks.filter(t => t.done).length}/${tasks.length}</span>`;
-    group.appendChild(header);
-
-    tasks.forEach(task => {
-      const el = document.createElement('div');
-      el.className = 'task' + (task.done ? ' done' : '');
-      const color = subjectColor(task.subject);
-      const durText = '⏱ ' + (task.duration || 30) + ' min';
-      const slotText = typeof task.scheduledStart === 'number'
-        ? ' · 🕒 ' + fmtMin(task.scheduledStart) + '–' + fmtMin(task.scheduledStart + (task.duration || 30))
-        : '';
-      el.dataset.id = task.id;
-      el.innerHTML = `
-        <div class="drag-handle" title="Glisser pour réordonner ou placer dans l'emploi du temps">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle>
-            <circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle>
-            <circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle>
-          </svg>
-        </div>
-        <div class="checkbox ${task.done ? 'checked' : ''}" data-id="${task.id}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#14171c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <div class="task-body">
-          <div class="task-top">
-            <span class="tag" style="background:${color}22; color:${color}">${task.subject}</span>
-            <span class="task-meta">${durText}${slotText}</span>
-          </div>
-          <div class="task-title">${escapeHtml(task.title)}</div>
-        </div>
-        <button class="task-delete" data-id="${task.id}" aria-label="Supprimer">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      `;
-      group.appendChild(el);
-    });
-
-    list.appendChild(group);
+  document.getElementById('schGrid').addEventListener('click', e => {
+    const taskEl = e.target.closest('.sch-task');
+    if (!taskEl) return;
+    if (e.target.closest('.sch-check')) toggleTask(taskEl.dataset.id);
+    else if (e.target.closest('.sch-unplace')) unscheduleTask(taskEl.dataset.id);
   });
 
-  list.querySelectorAll('.checkbox').forEach(cb => {
-    cb.addEventListener('click', () => toggleTask(cb.dataset.id));
+  window.addEventListener('resize', () => {
+    if (!isDragging) renderSchedule();
   });
-  list.querySelectorAll('.task-delete').forEach(btn => {
-    btn.addEventListener('click', () => deleteTask(btn.dataset.id));
-  });
-
-  enableDragReorder(list);
-  renderSchedule();
-  updateProgress();
 }
+
+/* ---------- Glisser-déposer : boîte de réception -> emploi du temps ----------
+   Souris : on attrape la tuile et on la déplace.
+   Doigt  : appui long (~0,2 s) puis déplacement. */
 function enableDragReorder(list) {
-  let draggedEl = null;
-  let draggedGroup = null;
-  let dropStart = null;
+  if (!list || list.dataset.dragBound) return;
+  list.dataset.dragBound = '1';
 
-  const commitOrder = () => {
-    const newOrder = Array.from(list.querySelectorAll('.task')).map(el => el.dataset.id);
-    state.tasks.sort((a, b) => newOrder.indexOf(String(a.id)) - newOrder.indexOf(String(b.id)));
-    saveData(state);
+  let drag = null;
+  let raf = 0;
+
+  const slotAt = (x, y) => {
+    const sc = document.getElementById('schScroll').getBoundingClientRect();
+    if (x < sc.left || x > sc.right || y < sc.top || y > sc.bottom) return null;
+    const g = document.getElementById('schGrid').getBoundingClientRect();
+    const raw = DAY_START + (y - g.top) / HOUR_PX * 60;
+    return Math.floor(raw / SNAP) * SNAP;
   };
 
-  const clearPreview = () => {
-    const p = document.getElementById('schPreview');
-    if (p) p.remove();
-    dropStart = null;
-  };
+  const refresh = () => {
+    if (!drag || !drag.active) return;
+    drag.ghost.style.left = drag.x + 'px';
+    drag.ghost.style.top = drag.y + 'px';
 
-  const previewOnSchedule = (x, y) => {
-    const grid = document.getElementById('schGrid');
-    const under = document.elementFromPoint(x, y);
-    if (!grid || !under || !under.closest('#schGrid')) {
-      clearPreview();
-      return false;
+    const dur = drag.task.duration || 30;
+    const slot = slotAt(drag.x, drag.y);
+    drag.slot = null;
+
+    if (slot === null) {
+      drag.preview.style.display = 'none';
+      return;
     }
-    const task = state.tasks.find(t => String(t.id) === String(draggedEl.dataset.id));
-    const dur = (task && task.duration) || 30;
-    const rect = grid.getBoundingClientRect();
-    let start = DAY_START + ((y - rect.top) / HOUR_PX) * 60;
-    start = Math.floor(start / SNAP) * SNAP;
-    const bad = findConflict(schedViewDate || todayKey(), start, dur, draggedEl.dataset.id);
+    const bad = findConflict(schedViewDate, slot, dur, drag.task.id);
+    drag.slot = bad ? null : slot;
+    drag.preview.className = 'sch-drop' + (bad ? ' bad' : '');
+    drag.preview.style.display = 'block';
+    drag.preview.style.top = ((slot - DAY_START) / 60 * HOUR_PX) + 'px';
+    drag.preview.style.height = Math.max(28, dur / 60 * HOUR_PX - 2) + 'px';
+    drag.preview.textContent = fmtMin(slot) + ' – ' + fmtMin(slot + dur);
+  };
 
-    let p = document.getElementById('schPreview');
-    if (!p) {
-      p = document.createElement('div');
-      p.id = 'schPreview';
-      grid.appendChild(p);
+  const loop = () => {
+    if (!drag || !drag.active) return;
+    const sc = document.getElementById('schScroll');
+    const r = sc.getBoundingClientRect();
+    if (drag.x >= r.left && drag.x <= r.right) {
+      if (drag.y >= r.top && drag.y < r.top + 50) sc.scrollTop -= 10;
+      else if (drag.y <= r.bottom && drag.y > r.bottom - 50) sc.scrollTop += 10;
     }
-    p.className = 'sch-preview' + (bad ? ' bad' : '');
-    p.style.top = ((start - DAY_START) / 60 * HOUR_PX) + 'px';
-    p.style.height = Math.max(14, dur / 60 * HOUR_PX) + 'px';
-    dropStart = bad ? null : start;
-    return true;
+    refresh();
+    raf = requestAnimationFrame(loop);
   };
 
-  const moveOver = (x, y) => {
-    if (!draggedEl) return;
-    if (previewOnSchedule(x, y)) return;
-    const target = document.elementFromPoint(x, y);
-    const targetTask = target ? target.closest('.task') : null;
-    if (targetTask && targetTask !== draggedEl && targetTask.parentElement === draggedGroup) {
-      const rect = targetTask.getBoundingClientRect();
-      const before = y < rect.top + rect.height / 2;
-      draggedGroup.insertBefore(draggedEl, before ? targetTask : targetTask.nextSibling);
+  const begin = () => {
+    if (!drag || drag.active) return;
+    drag.active = true;
+    isDragging = true;
+    clearTimeout(drag.timer);
+
+    const r = drag.tile.getBoundingClientRect();
+    drag.ghost = drag.tile.cloneNode(true);
+    drag.ghost.classList.add('drag-ghost');
+    drag.ghost.style.width = r.width + 'px';
+    document.body.appendChild(drag.ghost);
+    drag.tile.classList.add('dragging');
+
+    drag.preview = document.createElement('div');
+    drag.preview.className = 'sch-drop';
+    drag.preview.style.display = 'none';
+    document.getElementById('schGrid').appendChild(drag.preview);
+
+    if (navigator.vibrate) navigator.vibrate(15);
+    refresh();
+    raf = requestAnimationFrame(loop);
+  };
+
+  const finish = (drop) => {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    clearTimeout(d.timer);
+    cancelAnimationFrame(raf);
+    if (!d.active) return;
+    isDragging = false;
+    d.ghost.remove();
+    d.preview.remove();
+    d.tile.classList.remove('dragging');
+    if (drop && typeof d.slot === 'number') {
+      scheduleTask(d.task.id, schedViewDate, d.slot);
     }
   };
 
-  const start = (taskEl) => {
-    draggedEl = taskEl;
-    draggedGroup = taskEl.parentElement;
-    taskEl.classList.add('dragging');
-  };
+  list.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const tile = e.target.closest('.tile');
+    if (!tile || e.target.closest('.tile-del')) return;
+    const task = state.tasks.find(t => String(t.id) === tile.dataset.id);
+    if (!task) return;
+    drag = {
+      task, tile,
+      id: e.pointerId,
+      touch: e.pointerType === 'touch',
+      x: e.clientX, y: e.clientY,
+      sx: e.clientX, sy: e.clientY,
+      active: false, slot: null, timer: null
+    };
+    if (drag.touch) drag.timer = setTimeout(begin, 220);
+  });
 
-  const end = () => {
-    if (!draggedEl) return;
-    draggedEl.classList.remove('dragging');
-    const id = draggedEl.dataset.id;
-    const slot = dropStart;
-    clearPreview();
-    draggedEl = null;
-    draggedGroup = null;
-    if (slot !== null) {
-      scheduleTask(id, schedViewDate || todayKey(), slot);
-    } else {
-      commitOrder();
+  document.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+    if (!drag.active) {
+      const moved = Math.hypot(drag.x - drag.sx, drag.y - drag.sy);
+      if (drag.touch) { if (moved > 8) finish(false); }
+      else if (moved > 5) begin();
     }
-  };
+  });
 
-  list.querySelectorAll('.drag-handle').forEach(handle => {
-    const taskEl = handle.closest('.task');
+  document.addEventListener('pointerup', e => {
+    if (drag && e.pointerId === drag.id) finish(true);
+  });
+  document.addEventListener('pointercancel', e => {
+    if (drag && e.pointerId === drag.id) finish(false);
+  });
 
-    handle.addEventListener('touchstart', () => start(taskEl), { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (drag && drag.active) e.preventDefault();
+  }, { passive: false });
 
-    handle.addEventListener('touchmove', (e) => {
-      if (!draggedEl) return;
-      e.preventDefault();
-      const t = e.touches[0];
-      moveOver(t.clientX, t.clientY);
-    }, { passive: false });
+  list.addEventListener('contextmenu', e => {
+    if (e.target.closest('.tile')) e.preventDefault();
+  });
 
-    handle.addEventListener('touchend', end);
-    handle.addEventListener('touchcancel', end);
-
-    handle.addEventListener('mousedown', () => {
-      start(taskEl);
-      const onMove = (e) => moveOver(e.clientX, e.clientY);
-      const onUp = () => {
-        end();
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
+  list.addEventListener('click', e => {
+    const del = e.target.closest('.tile-del');
+    if (!del) return;
+    const tile = del.closest('.tile');
+    if (tile && confirm('Supprimer cette tâche ?')) deleteTask(tile.dataset.id);
   });
 }
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+/* ---------- Formulaire d'ajout ---------- */
+const sheetBackdrop = document.getElementById('sheetBackdrop');
+const taskInput = document.getElementById('taskInput');
+const btnAdd = document.getElementById('btnAdd');
+const subjectGrid = document.getElementById('subjectGrid');
 
-  function updateProgress() {
-  const today = todayKey();
-  const relevantTasks = state.tasks.filter(t => t.dueDate === today);
-  const total = relevantTasks.length;
-  const done = relevantTasks.filter(t => t.done).length;
-  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressText').textContent = `${done}/${total}`;
+function renderSubjectChips() {
+  subjectGrid.innerHTML = '';
+  SUBJECTS.forEach(s => {
+    const chip = document.createElement('div');
+    chip.className = 'subject-chip';
+    chip.textContent = s.name;
+    chip.style.borderColor = s.color + '55';
+    chip.addEventListener('click', () => {
+      selectedSubject = s.name;
+      document.querySelectorAll('.subject-chip').forEach(c => {
+        c.classList.remove('selected');
+        c.style.background = 'var(--card)';
+        c.style.color = 'var(--ink-dim)';
+      });
+      chip.classList.add('selected');
+      chip.style.background = s.color;
+      chip.style.color = '#14171c';
+      validateForm();
+    });
+    subjectGrid.appendChild(chip);
+  });
 }
 
-  function toggleTask(id) {
-    const task = state.tasks.find(t => t.id === id);
-    if (task) {
-      task.done = !task.done;
-      if (task.done) {
-        // Petite vibration si le téléphone le supporte (Safari iOS l'ignore silencieusement sinon)
-        if (navigator.vibrate) navigator.vibrate(15);
-        const cb = document.querySelector(`.checkbox[data-id="${id}"]`);
-        if (cb) {
-          cb.classList.add('pop');
-          setTimeout(() => cb.classList.remove('pop'), 300);
-        }
-      }
-      saveData(state);
-      updateStreak();
-      renderTasks();
-      renderStreak();
-    }
-  }
-
-  function deleteTask(id) {
-    state.tasks = state.tasks.filter(t => t.id !== id);
-    saveData(state);
-    renderTasks();
-  }
-
-  // Sheet (formulaire d'ajout)
-  const sheetBackdrop = document.getElementById('sheetBackdrop');
-  const taskInput = document.getElementById('taskInput');
-  const btnAdd = document.getElementById('btnAdd');
-  const subjectGrid = document.getElementById('subjectGrid');
-
-  function renderSubjectChips() {
-    subjectGrid.innerHTML = '';
-    SUBJECTS.forEach(s => {
-      const chip = document.createElement('div');
-      chip.className = 'subject-chip';
-      chip.textContent = s.name;
-      chip.style.borderColor = s.color + '55';
-      chip.addEventListener('click', () => {
-        selectedSubject = s.name;
-        document.querySelectorAll('.subject-chip').forEach(c => {
-          c.classList.remove('selected');
-          c.style.background = 'var(--card)';
-          c.style.color = 'var(--ink-dim)';
-        });
-        chip.classList.add('selected');
-        chip.style.background = s.color;
-        chip.style.color = '#14171c';
-        validateForm();
-      });
-      subjectGrid.appendChild(chip);
-    });
-  }
-
-  function validateForm() {
-    btnAdd.disabled = !(selectedSubject && taskInput.value.trim().length > 0);
-  }
+function validateForm() {
+  btnAdd.disabled = !(selectedSubject && taskInput.value.trim().length > 0);
+}
 
 function openSheet() {
-    // NOUVEAU : On décoche la case à chaque fois qu'on ouvre le menu
-    if (document.getElementById('taskRecurring')) {
-        document.getElementById('taskRecurring').checked = false; 
-    }
-    selectedSubject = null;
-    taskInput.value = '';
-    renderSubjectChips();
-    validateForm();
-    sheetBackdrop.classList.add('open');
-    setTimeout(() => taskInput.focus(), 100);
-  }
+  selectedSubject = null;
+  taskInput.value = '';
+  document.getElementById('taskDuration').value = 30;
+  document.getElementById('task-due-date').value = '';
+  document.getElementById('taskRecurring').checked = false;
+  renderSubjectChips();
+  validateForm();
+  sheetBackdrop.classList.add('open');
+  setTimeout(() => taskInput.focus(), 100);
+}
 
-  function closeSheet() {
-    sheetBackdrop.classList.remove('open');
-  }
+function closeSheet() {
+  sheetBackdrop.classList.remove('open');
+}
 
-  document.getElementById('fabAdd').addEventListener('click', openSheet);
-  document.getElementById('btnCancel').addEventListener('click', closeSheet);
-  sheetBackdrop.addEventListener('click', (e) => {
-    if (e.target === sheetBackdrop) closeSheet();
-  });
-  taskInput.addEventListener('input', validateForm);
-  
-btnAdd.addEventListener('click', () => {
-  if (selectedSubject && taskInput.value.trim()) {
-    const dateInput = document.getElementById('task-due-date');
-    const durInput = document.getElementById('taskDuration');
-    const dueDate = dateInput && dateInput.value ? dateInput.value : todayKey();
-    const duration = Math.min(240, Math.max(5, parseInt(durInput && durInput.value, 10) || 30));
-
-    addTask(selectedSubject, taskInput.value.trim(), dueDate, duration);
-    if (durInput) durInput.value = 30;
-    closeSheet();
-  }
+document.getElementById('fabAdd').addEventListener('click', openSheet);
+document.getElementById('btnCancel').addEventListener('click', closeSheet);
+sheetBackdrop.addEventListener('click', (e) => {
+  if (e.target === sheetBackdrop) closeSheet();
+});
+taskInput.addEventListener('input', validateForm);
+taskInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') btnAdd.click();
 });
 
-  renderDate();
-  renderTasks();
-  renderStreak();
-  handleUrlParams();
+btnAdd.addEventListener('click', () => {
+  const title = taskInput.value.trim();
+  if (!selectedSubject || !title) return;
+
+  const dateInput = document.getElementById('task-due-date');
+  const durInput = document.getElementById('taskDuration');
+  const recInput = document.getElementById('taskRecurring');
+
+  const dueDate = dateInput.value ? dateInput.value : todayKey();
+  const duration = Math.min(240, Math.max(5, parseInt(durInput.value, 10) || 30));
+
+  addTask(selectedSubject, title, dueDate, duration, recInput.checked);
+  closeSheet();
+});
+
+/* ---------- Démarrage ---------- */
+initSchedule();
+renderDate();
+renderTasks();
+renderStreak();
 </script>
 </body>
 </html>
