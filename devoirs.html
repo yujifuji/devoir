@@ -511,7 +511,7 @@ const STREAK_KEY = "devoirs_streak_log_v1";
 let selectedSubject = null;
 
 /* ---------- Emploi du temps : données ---------- */
-const Q1_REF_MONDAY = '2026-09-28';
+const Q1_REF_MONDAY = '2026-10-1';
 const NO_REVIEW = ['EPS', 'Vie de classe'];
 const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
@@ -521,38 +521,39 @@ let HOUR_PX = MIN_HOUR_PX;
 
 const SCHEDULE = {
   1: [
-    { s: 8, e: 9, all: 'Maths' },
-    { s: 9, e: 10, all: 'NSI' },
-    { s: 10, e: 11, all: 'Français' },
-    { s: 11, e: 12, all: 'SES' }
+    { s: 9, e: 11, all: 'Maths' },
+    { s: 11, e: 13, all: 'NSI' },
+    { s: 14, e: 15, all: 'Français' },
+    { s: 15, e: 16, all: 'SES' }
   ],
   2: [
     { s: 8, e: 9, all: 'Français' },
-    { s: 9, e: 10, q1: 'Ens. Scientifique P', q2: 'Anglais LV1' },
-    { s: 10, e: 11, all: 'Physique-Chimie' },
-    { s: 11, e: 12, all: 'Histoire-Géo' },
-    { s: 15, e: 16, all: 'Allemand LV2' },
-    { s: 16, e: 17, all: 'Musique' }
+    { s: 9, e: 10, q1: 'Anglais', q2: 'G-SCI' },
+    { s: 10, e: 12, all: 'Physique-Chimie' },
+    { s: 12, e: 13, all: 'Histoire-Géo' },
+    { s: 14, e: 15, all: 'Allemand' },
+    { s: 15, e: 17, all: 'NSI' }
   ],
   3: [
-    { s: 8, e: 9, all: 'NSI' },
-    { s: 9, e: 10, all: 'Maths' },
-    { s: 10, e: 11, q1: 'SES', q2: 'Ens. Scientifique S' },
-    { s: 11, e: 12, all: 'Histoire-Géo' }
+    { s: 8, e: 10, all: 'Maths' },
+    { s: 11, e: 12, q1: 'SES', q2: 'G-SCI' },
+    { s: 12, e: 13, all: 'Histoire-Géo' }
+    { s: 15, e: 16, all: 'Francais' },
+    { s: 16, e: 17, all: 'Anglais' },
+    { s: 17, e: 18, all: 'EMC' },
   ],
   4: [
-    { s: 8, e: 9, all: 'Français' },
-    { s: 9, e: 10, q1: 'Histoire-Géo', q2: 'Français' },
-    { s: 10, e: 11, q1: 'Français', q2: 'EMC' },
-    { s: 11, e: 12, all: 'Anglais LV1' }
+    { s: 13, e: 15, all: 'Français' },
+    { s: 15, e: 16, q1: 'Anglais', q2: 'Histoire-Géo' },
   ],
   5: [
     { s: 8, e: 10, all: 'EPS' },
-    { s: 10, e: 11, all: 'Physique-Chimie' },
-    { s: 11, e: 12, q1: 'SES', q2: 'Ens. Scientifique S' },
-    { s: 13, e: 14, all: 'Anglais LV1' },
-    { s: 14, e: 15, q1: 'Vie de classe', q2: 'Ens. Scientifique P' },
-    { s: 15, e: 16, all: 'Allemand LV2' }
+    { s: 10, e: 12, all: 'Physique-Chimie' },
+    { s: 12, e: 13, q1: 'G-SCI', q2: 'SES' },
+    { s: 14, e: 15, all: 'Anglais' },
+    { s: 15, e: 16, q2: 'G-SCI' },
+    { s: 16, e: 17, all: 'Anglais' },
+    { s: 17, e: 18, all: 'Allemand' }
   ]
 };
 
