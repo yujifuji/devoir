@@ -511,7 +511,7 @@ const STREAK_KEY = "devoirs_streak_log_v1";
 let selectedSubject = null;
 
 /* ---------- Emploi du temps : données ---------- */
-const Q1_REF_MONDAY = '2026-10-1';
+const Q1_REF_MONDAY = '2026-10-5';
 const NO_REVIEW = ['EPS', 'Vie de classe'];
 const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
@@ -537,14 +537,14 @@ const SCHEDULE = {
   3: [
     { s: 8, e: 10, all: 'Maths' },
     { s: 11, e: 12, q1: 'SES', q2: 'G-SCI' },
-    { s: 12, e: 13, all: 'Histoire-Géo' }
-    { s: 15, e: 16, all: 'Francais' },
+    { s: 12, e: 13, all: 'Histoire-Géo' },
+    { s: 15, e: 16, all: 'Français' },
     { s: 16, e: 17, all: 'Anglais' },
-    { s: 17, e: 18, all: 'EMC' },
+    { s: 17, e: 18, all: 'EMC' }
   ],
   4: [
     { s: 13, e: 15, all: 'Français' },
-    { s: 15, e: 16, q1: 'Anglais', q2: 'Histoire-Géo' },
+    { s: 15, e: 16, q1: 'Anglais', q2: 'Histoire-Géo' }
   ],
   5: [
     { s: 8, e: 10, all: 'EPS' },
@@ -560,7 +560,6 @@ const SCHEDULE = {
 let schedViewDate = null;
 let isDragging = false;
 
-/* ---------- Dates ---------- */
 function parseDateKey(key) {
   const p = key.split('-').map(Number);
   return new Date(p[0], p[1] - 1, p[2]);
@@ -588,7 +587,10 @@ function getQuinzaine(dateKey) {
 function getCoursesForDate(dateKey) {
   const q = getQuinzaine(dateKey);
   const slots = SCHEDULE[parseDateKey(dateKey).getDay()] || [];
-  return slots.map(c => ({ s: c.s, e: c.e, name: c.all || (q === 'Q1' ? c.q1 : c.q2) }));
+  return slots
+    .map(c => ({ s: c.s, e: c.e, name: c.all || (q === 'Q1' ? c.q1 : c.q2) }))
+    .filter(c => typeof c.name === 'string' && c.name.length > 0)
+    .sort((a, b) => a.s - b.s);
 }
 
 function getReviewCourses(dateKey) {
