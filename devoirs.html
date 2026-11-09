@@ -515,9 +515,13 @@ const Q1_REF_MONDAY = '2026-10-5';
 const NO_REVIEW = ['EPS', 'Vie de classe'];
 const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
-const MIN_HOUR_PX = 48;
+const COURSE_HOUR_PX = 22;
+const FREE_HOUR_PX = 112;
+const MIN_HOUR_PX = FREE_HOUR_PX;
 const SNAP = 15;
-let HOUR_PX = MIN_HOUR_PX;
+const MIN_BLOCK_PX = 26;
+let HOUR_PX = FREE_HOUR_PX;
+let layout = null;
 
 const SCHEDULE = {
   1: [
@@ -538,9 +542,9 @@ const SCHEDULE = {
     { s: 8, e: 10, all: 'Maths' },
     { s: 11, e: 12, q1: 'SES', q2: 'G-SCI' },
     { s: 12, e: 13, all: 'Histoire-Géo' },
-    { s: 15, e: 16, all: 'Français' },
-    { s: 16, e: 17, all: 'Anglais' },
-    { s: 17, e: 18, all: 'EMC' }
+    { s: 15, e: 16, all: 'Francais' },
+    { s: 16, e: 17, q1: 'Anglais', q2:'Histoire-Géo },
+    { s: 17, e: 18, all: 'EMC', q2:'Francais }
   ],
   4: [
     { s: 13, e: 15, all: 'Français' },
@@ -552,7 +556,7 @@ const SCHEDULE = {
     { s: 12, e: 13, q1: 'G-SCI', q2: 'SES' },
     { s: 14, e: 15, all: 'Anglais' },
     { s: 15, e: 16, q2: 'G-SCI' },
-    { s: 16, e: 17, all: 'Anglais' },
+    { s: 16, e: 17, q2: 'Anglais' },
     { s: 17, e: 18, all: 'Allemand' }
   ]
 };
@@ -560,97 +564,16 @@ const SCHEDULE = {
 let schedViewDate = null;
 let isDragging = false;
 
-function parseDateKey(key) {
-  const p = key.split('-').map(Number);
-  return new Date(p[0], p[1] - 1, p[2]);
-}
-
-function toDateKey(d) {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
-
-function todayKey() {
-  return toDateKey(new Date());
-}
-
-function mondayOf(d) {
-  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
-  return x;
-}
-
-function getQuinzaine(dateKey) {
-  const diff = Math.round((mondayOf(parseDateKey(dateKey)) - mondayOf(parseDateKey(Q1_REF_MONDAY))) / 604800000);
-  return (((diff % 2) + 2) % 2 === 0) ? 'Q1' : 'Q2';
-}
-
 function getCoursesForDate(dateKey) {
   const q = getQuinzaine(dateKey);
   const slots = SCHEDULE[parseDateKey(dateKey).getDay()] || [];
   return slots
     .map(c => ({ s: c.s, e: c.e, name: c.all || (q === 'Q1' ? c.q1 : c.q2) }))
-    .filter(c => typeof c.name === 'string' && c.name.length > 0)
-    .sort((a, b) => a.s - b.s);
+    .filter(c => !!c.name);
 }
 
-function getReviewCourses(dateKey) {
-  const names = [];
-  getCoursesForDate(dateKey).forEach(c => {
-    if (NO_REVIEW.indexOf(c.name) === -1 && names.indexOf(c.name) === -1) names.push(c.name);
-  });
-  return names;
-}
-
-function fmtMin(m) {
-  return String(Math.floor(m / 60)).padStart(2, '0') + 'h' + String(m % 60).padStart(2, '0');
-}
-
-function formatDueDate(dueDate) {
-  if (!dueDate) return '';
-  const diff = Math.round((parseDateKey(dueDate) - parseDateKey(todayKey())) / 86400000);
-  if (diff === 0) return "Aujourd'hui";
-  if (diff === 1) return 'Demain';
-  if (diff === -1) return 'Hier';
-  const d = parseDateKey(dueDate);
-  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
-}
-
-function formatDayLabel(dateStr) {
-  if (!dateStr) return 'Sans date';
-  const date = parseDateKey(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.round((date - today) / 86400000);
-  const full = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-  if (diff === 0) return "Aujourd'hui · " + full;
-  if (diff === 1) return 'Demain · ' + full;
-  if (diff === -1) return 'Hier · ' + full;
-  return full.charAt(0).toUpperCase() + full.slice(1);
-}
-
-function renderDate() {
-  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
-  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('fr-FR', opts);
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str == null ? '' : String(str);
-  return div.innerHTML;
-}
-
-function subjectColor(name) {
-  const s = SUBJECTS.find(s => s.name === name);
-  return s ? s.color : "#8b93a1";
-}
-
-/* Jour auquel une tâche compte : son créneau si elle est placée, sinon son échéance */
-function taskDay(t) {
-  return (typeof t.scheduledStart === 'number' && t.scheduledDate) ? t.scheduledDate : t.dueDate;
-}
-
-/* ---------- Conflits de créneau ---------- */
 function findConflict(dateKey, start, dur, ignoreId, tasks) {
+  if (!Number.isFinite(start) || !Number.isFinite(dur) || dur <= 0) return true;
   const end = start + dur;
   if (start < DAY_START || end > DAY_END) return true;
   const pool = tasks || state.tasks;
@@ -663,234 +586,81 @@ function findConflict(dateKey, start, dur, ignoreId, tasks) {
   return busy.some(b => start < b[1] && end > b[0]);
 }
 
-/* ---------- Données ---------- */
-function rolloverTasks(tasks, today) {
-  return tasks
-    .filter(t => t.recurring || !t.done || (taskDay(t) || today) >= today)
-    .map(t => {
-      const n = Object.assign({}, t);
-      if (n.recurring) {
-        n.done = false;
-        n.dueDate = today;
-        if (typeof n.scheduledStart === 'number' && !findConflict(today, n.scheduledStart, n.duration || 30, n.id, [])) {
-          n.scheduledDate = today;
-        } else {
-          delete n.scheduledStart;
-          delete n.scheduledDate;
-        }
-      } else if (!n.done && typeof n.scheduledStart === 'number' && n.scheduledDate && n.scheduledDate < today) {
-        delete n.scheduledStart;
-        delete n.scheduledDate;
-      }
-      return n;
+function buildLayout(dateKey) {
+  const merged = [];
+  getCoursesForDate(dateKey)
+    .map(c => [Math.max(c.s * 60, DAY_START), Math.min(c.e * 60, DAY_END)])
+    .filter(b => b[1] > b[0])
+    .sort((a, b) => a[0] - b[0])
+    .forEach(b => {
+      const last = merged[merged.length - 1];
+      if (last && b[0] <= last[1]) last[1] = Math.max(last[1], b[1]);
+      else merged.push([b[0], b[1]]);
     });
-}
 
-function loadData() {
-  const today = todayKey();
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { date: today, tasks: [] };
-    const data = JSON.parse(raw);
-    let tasks = Array.isArray(data.tasks) ? data.tasks : [];
-    tasks = tasks.map(t => {
-      if (typeof t.scheduledStart === 'number' && !t.scheduledDate) {
-        return Object.assign({}, t, { scheduledDate: t.dueDate || today });
-      }
-      return t;
-    });
-    if (data.date !== today) tasks = rolloverTasks(tasks, today);
-    return { date: today, tasks };
-  } catch (e) {
-    return { date: today, tasks: [] };
-  }
-}
-
-function saveData(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error("Erreur de sauvegarde", e);
-  }
-}
-
-let state = loadData();
-
-/* ---------- Série de jours ---------- */
-function loadStreakLog() {
-  try {
-    const raw = localStorage.getItem(STREAK_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function saveStreakLog(log) {
-  try {
-    localStorage.setItem(STREAK_KEY, JSON.stringify(log));
-  } catch (e) {
-    console.error("Erreur de sauvegarde du streak", e);
-  }
-}
-
-function updateStreak() {
-  const log = loadStreakLog();
-  const today = todayKey();
-  const relevant = state.tasks.filter(t => taskDay(t) === today);
-  const done = relevant.filter(t => t.done).length;
-  log[today] = relevant.length > 0 && done === relevant.length;
-  saveStreakLog(log);
-}
-
-function computeStreak() {
-  const log = loadStreakLog();
-  let streak = 0;
-  const cursor = new Date();
-  if (!log[todayKey()]) cursor.setDate(cursor.getDate() - 1);
-  while (log[toDateKey(cursor)]) {
-    streak++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
-
-function renderStreak() {
-  const streak = computeStreak();
-  const badge = document.getElementById('streakBadge');
-  if (streak >= 2) {
-    document.getElementById('streakCount').textContent = streak;
-    badge.classList.add('visible');
-  } else {
-    badge.classList.remove('visible');
-  }
-}
-
-function updateProgress() {
-  const today = todayKey();
-  const relevant = state.tasks.filter(t => taskDay(t) === today);
-  const total = relevant.length;
-  const done = relevant.filter(t => t.done).length;
-  document.getElementById('progressFill').style.width = (total === 0 ? 0 : Math.round(done / total * 100)) + '%';
-  document.getElementById('progressText').textContent = done + '/' + total;
-}
-
-/* ---------- Actions sur les tâches ---------- */
-function addTask(subject, title, dueDate, duration, recurring) {
-  state.tasks.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-    subject,
-    title,
-    dueDate: dueDate || todayKey(),
-    duration: duration || 30,
-    recurring: !!recurring,
-    done: false
+  const segs = [];
+  let cur = DAY_START;
+  merged.forEach(b => {
+    if (b[0] > cur) segs.push({ s: cur, e: b[0], type: 'free' });
+    segs.push({ s: b[0], e: b[1], type: 'course' });
+    cur = b[1];
   });
-  saveData(state);
-  updateStreak();
-  renderTasks();
-  renderStreak();
-}
+  if (cur < DAY_END) segs.push({ s: cur, e: DAY_END, type: 'free' });
 
-function scheduleTask(id, dateKey, start) {
-  const t = state.tasks.find(x => String(x.id) === String(id));
-  if (!t) return;
-  t.scheduledDate = dateKey;
-  t.scheduledStart = start;
-  saveData(state);
-  updateStreak();
-  renderTasks();
-  renderStreak();
-}
+  let courseMin = 0;
+  let freeMin = 0;
+  segs.forEach(sg => {
+    if (sg.type === 'course') courseMin += sg.e - sg.s;
+    else freeMin += sg.e - sg.s;
+  });
 
-function unscheduleTask(id) {
-  const t = state.tasks.find(x => String(x.id) === String(id));
-  if (!t) return;
-  delete t.scheduledStart;
-  delete t.scheduledDate;
-  t.done = false;
-  saveData(state);
-  updateStreak();
-  renderTasks();
-  renderStreak();
-}
-
-function toggleTask(id) {
-  const t = state.tasks.find(x => String(x.id) === String(id));
-  if (!t) return;
-  t.done = !t.done;
-  if (t.done && navigator.vibrate) navigator.vibrate(15);
-  saveData(state);
-  updateStreak();
-  renderTasks();
-  renderStreak();
-  if (t.done) {
-    const cb = document.querySelector('.sch-task[data-id="' + id + '"] .sch-check');
-    if (cb) {
-      cb.classList.add('pop');
-      setTimeout(() => cb.classList.remove('pop'), 300);
-    }
+  const sc = document.getElementById('schScroll');
+  const avail = sc ? sc.clientHeight - 20 : 0;
+  const courseH = courseMin / 60 * COURSE_HOUR_PX;
+  let freePx = FREE_HOUR_PX;
+  if (freeMin > 0) {
+    freePx = Math.max(FREE_HOUR_PX, Math.floor((avail - courseH) / (freeMin / 60)));
   }
-}
 
-function deleteTask(id) {
-  state.tasks = state.tasks.filter(x => String(x.id) !== String(id));
-  saveData(state);
-  updateStreak();
-  renderTasks();
-  renderStreak();
-}
+  let y = 0;
+  segs.forEach(sg => {
+    sg.ppm = (sg.type === 'free' ? freePx : COURSE_HOUR_PX) / 60;
+    sg.y0 = y;
+    y += (sg.e - sg.s) * sg.ppm;
+    sg.y1 = y;
+  });
 
-/* ---------- Rendu ---------- */
-function renderTasks() {
-  renderInbox();
-  renderSchedule();
-  updateProgress();
-}
-
-function renderInbox() {
-  const box = document.getElementById('inboxTiles');
-  if (!box) return;
-  const today = todayKey();
-  const pending = state.tasks
-    .filter(t => !t.done && typeof t.scheduledStart !== 'number')
-    .map((t, i) => ({ t, i }))
-    .sort((a, b) => {
-      const da = a.t.dueDate || '9999-12-31';
-      const db = b.t.dueDate || '9999-12-31';
-      return da === db ? a.i - b.i : (da < db ? -1 : 1);
-    })
-    .map(x => x.t);
-
-  document.getElementById('inboxCount').textContent = pending.length;
-
-  if (!pending.length) {
-    box.innerHTML = '<div class="inbox-empty">' +
-      (state.tasks.length === 0 ? 'Aucune tâche. Appuie sur + pour en ajouter une.' : 'Tout est placé ✨') +
-      '</div>';
-  } else {
-    box.innerHTML = pending.map(t => {
-      const color = subjectColor(t.subject);
-      const late = !!t.dueDate && t.dueDate < today;
-      const meta = '⏱ ' + (t.duration || 30) + ' min' +
-        (t.dueDate ? ' · ' + (late ? '⚠️ ' : '📅 ') + escapeHtml(formatDueDate(t.dueDate)) : '') +
-        (t.recurring ? ' · 🔁' : '');
-      return `<div class="tile" data-id="${t.id}" style="border-left-color:${color};background:${color}22">
-        <span class="tile-subject" style="color:${color}">${escapeHtml(t.subject)}</span>
-        <span class="tile-title">${escapeHtml(t.title)}</span>
-        <span class="tile-meta${late ? ' late' : ''}">${meta}</span>
-        <button class="tile-del" aria-label="Supprimer la tâche">×</button>
-      </div>`;
-    }).join('');
-  }
-  enableDragReorder(box);
+  return { date: dateKey, segs, height: y, freePx };
 }
 
 function fitHourPx() {
-  const sc = document.getElementById('schScroll');
-  const hours = (DAY_END - DAY_START) / 60;
-  const avail = sc.clientHeight - 20;
-  HOUR_PX = Math.max(MIN_HOUR_PX, Math.floor(avail / hours));
+  layout = buildLayout(schedViewDate || todayKey());
+  HOUR_PX = layout.freePx;
+}
+
+function getLayout() {
+  if (!layout || layout.date !== schedViewDate) fitHourPx();
+  return layout;
+}
+
+function minToY(m) {
+  const lay = getLayout();
+  const v = Math.min(Math.max(m, DAY_START), DAY_END);
+  for (let i = 0; i < lay.segs.length; i++) {
+    const sg = lay.segs[i];
+    if (v <= sg.e) return sg.y0 + (v - sg.s) * sg.ppm;
+  }
+  return lay.height;
+}
+
+function yToMin(y) {
+  const lay = getLayout();
+  const v = Math.min(Math.max(y, 0), lay.height);
+  for (let i = 0; i < lay.segs.length; i++) {
+    const sg = lay.segs[i];
+    if (v <= sg.y1) return sg.s + (v - sg.y0) / sg.ppm;
+  }
+  return DAY_END;
 }
 
 function renderSchedule() {
@@ -905,26 +675,41 @@ function renderSchedule() {
   document.getElementById('schReview').textContent = review.length ? '📖 À relire : ' + review.join(' · ') : '';
 
   fitHourPx();
-  grid.style.height = ((DAY_END - DAY_START) / 60 * HOUR_PX) + 'px';
+  const lay = layout;
+  grid.style.height = lay.height + 'px';
 
   let html = '';
+
+  lay.segs.forEach(sg => {
+    if (sg.type !== 'free') return;
+    for (let m = sg.s; m < sg.e; m += SNAP) {
+      if (m % 60 === 0) continue;
+      const top = minToY(m);
+      const strong = m % 30 === 0;
+      html += `<div class="sch-quarter" style="position:absolute;left:0;right:0;top:${top}px;height:0;border-top:1px dashed rgba(128,128,128,${strong ? 0.35 : 0.2});pointer-events:none"><span style="position:absolute;left:4px;top:1px;font-size:9px;line-height:1;opacity:.55">${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}</span></div>`;
+    }
+  });
+
   for (let m = DAY_START; m < DAY_END; m += 60) {
-    const top = (m - DAY_START) / 60 * HOUR_PX;
+    const top = minToY(m);
     html += `<div class="sch-hour" style="top:${top}px"><span>${m / 60}h</span></div>`;
   }
 
   getCoursesForDate(schedViewDate).forEach(c => {
-    const top = (c.s * 60 - DAY_START) / 60 * HOUR_PX;
-    const h = (c.e - c.s) * HOUR_PX - 2;
-    html += `<div class="sch-course" style="top:${top}px;height:${h}px">${escapeHtml(c.name)}</div>`;
+    const cs = Math.max(c.s * 60, DAY_START);
+    const ce = Math.min(c.e * 60, DAY_END);
+    if (ce <= cs) return;
+    const top = minToY(cs);
+    const h = Math.max(1, minToY(ce) - top - 2);
+    html += `<div class="sch-course" title="${escapeHtml(c.name)} · ${fmtMin(cs)}–${fmtMin(ce)}" style="top:${top}px;height:${h}px;box-sizing:border-box;overflow:hidden;display:flex;align-items:center;font-size:11px;line-height:1.1;padding-top:0;padding-bottom:0">${escapeHtml(c.name)}</div>`;
   });
 
   state.tasks.forEach(t => {
     if (typeof t.scheduledStart !== 'number' || t.scheduledDate !== schedViewDate) return;
     const color = subjectColor(t.subject);
     const dur = t.duration || 30;
-    const top = (t.scheduledStart - DAY_START) / 60 * HOUR_PX;
-    const h = Math.max(28, dur / 60 * HOUR_PX - 2);
+    const top = minToY(t.scheduledStart);
+    const h = Math.max(MIN_BLOCK_PX, minToY(t.scheduledStart + dur) - top - 2);
     const sub = h >= 46 ? `<span class="sch-sub">${escapeHtml(t.subject)} · ${fmtMin(t.scheduledStart)}–${fmtMin(t.scheduledStart + dur)}</span>` : '';
     html += `<div class="sch-task${t.done ? ' done' : ''}" data-id="${t.id}" style="top:${top}px;height:${h}px;background:${color}33;border-color:${color};color:${color};--c:${color}">
       <button class="sch-check" aria-label="${t.done ? 'Marquer comme non fait' : 'Marquer comme fait'}">${t.done ? '✓' : ''}</button>
@@ -936,36 +721,6 @@ function renderSchedule() {
   grid.innerHTML = html;
 }
 
-function shiftScheduleDay(n) {
-  const d = parseDateKey(schedViewDate || todayKey());
-  d.setDate(d.getDate() + n);
-  schedViewDate = toDateKey(d);
-  renderSchedule();
-}
-
-function initSchedule() {
-  document.getElementById('schPrev').addEventListener('click', () => shiftScheduleDay(-1));
-  document.getElementById('schNext').addEventListener('click', () => shiftScheduleDay(1));
-  document.getElementById('schTitle').addEventListener('click', () => {
-    schedViewDate = todayKey();
-    renderSchedule();
-  });
-
-  document.getElementById('schGrid').addEventListener('click', e => {
-    const taskEl = e.target.closest('.sch-task');
-    if (!taskEl) return;
-    if (e.target.closest('.sch-check')) toggleTask(taskEl.dataset.id);
-    else if (e.target.closest('.sch-unplace')) unscheduleTask(taskEl.dataset.id);
-  });
-
-  window.addEventListener('resize', () => {
-    if (!isDragging) renderSchedule();
-  });
-}
-
-/* ---------- Glisser-déposer : boîte de réception -> emploi du temps ----------
-   Souris : on attrape la tuile et on la déplace.
-   Doigt  : appui long (~0,2 s) puis déplacement. */
 function enableDragReorder(list) {
   if (!list || list.dataset.dragBound) return;
   list.dataset.dragBound = '1';
@@ -977,8 +732,12 @@ function enableDragReorder(list) {
     const sc = document.getElementById('schScroll').getBoundingClientRect();
     if (x < sc.left || x > sc.right || y < sc.top || y > sc.bottom) return null;
     const g = document.getElementById('schGrid').getBoundingClientRect();
-    const raw = DAY_START + (y - g.top) / HOUR_PX * 60;
-    return Math.floor(raw / SNAP) * SNAP;
+    const lay = getLayout();
+    const rel = y - g.top;
+    if (rel < 0 || rel > lay.height) return null;
+    const raw = yToMin(rel);
+    const snapped = Math.floor(raw / SNAP) * SNAP;
+    return Math.min(Math.max(snapped, DAY_START), DAY_END - SNAP);
   };
 
   const refresh = () => {
@@ -996,10 +755,11 @@ function enableDragReorder(list) {
     }
     const bad = findConflict(schedViewDate, slot, dur, drag.task.id);
     drag.slot = bad ? null : slot;
+    const top = minToY(slot);
     drag.preview.className = 'sch-drop' + (bad ? ' bad' : '');
     drag.preview.style.display = 'block';
-    drag.preview.style.top = ((slot - DAY_START) / 60 * HOUR_PX) + 'px';
-    drag.preview.style.height = Math.max(28, dur / 60 * HOUR_PX - 2) + 'px';
+    drag.preview.style.top = top + 'px';
+    drag.preview.style.height = Math.max(MIN_BLOCK_PX, minToY(slot + dur) - top - 2) + 'px';
     drag.preview.textContent = fmtMin(slot) + ' – ' + fmtMin(slot + dur);
   };
 
@@ -1007,9 +767,10 @@ function enableDragReorder(list) {
     if (!drag || !drag.active) return;
     const sc = document.getElementById('schScroll');
     const r = sc.getBoundingClientRect();
+    const edge = 40;
     if (drag.x >= r.left && drag.x <= r.right) {
-      if (drag.y >= r.top && drag.y < r.top + 50) sc.scrollTop -= 10;
-      else if (drag.y <= r.bottom && drag.y > r.bottom - 50) sc.scrollTop += 10;
+      if (drag.y < r.top + edge) sc.scrollTop -= 8;
+      else if (drag.y > r.bottom - edge) sc.scrollTop += 8;
     }
     refresh();
     raf = requestAnimationFrame(loop);
@@ -1049,7 +810,11 @@ function enableDragReorder(list) {
     d.ghost.remove();
     d.preview.remove();
     d.tile.classList.remove('dragging');
-    if (drop && typeof d.slot === 'number') {
+    if (
+      drop &&
+      typeof d.slot === 'number' &&
+      !findConflict(schedViewDate, d.slot, d.task.duration || 30, d.task.id)
+    ) {
       scheduleTask(d.task.id, schedViewDate, d.slot);
     }
   };
